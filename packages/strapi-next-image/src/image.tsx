@@ -13,6 +13,7 @@ import React, {
   useState,
   forwardRef,
 } from 'react';
+import ReactDOM from 'react-dom';
 import { getImgProps } from './get-img-props';
 import type {
   ImageProps,
@@ -306,44 +307,36 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
 ImageElement.displayName = 'ImageElement';
 
 function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const opts: ReactDOM.PreloadOptions = {
+    as: 'image',
+    imageSrcSet: imgAttributes.srcSet,
+    imageSizes: imgAttributes.sizes,
+    crossOrigin: imgAttributes.crossOrigin,
+    referrerPolicy: imgAttributes.referrerPolicy,
+    fetchPriority: imgAttributes.fetchPriority,
+  };
 
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    if (imgAttributes.srcSet) {
-      link.imageSrcset = imgAttributes.srcSet;
-    } else {
-      link.href = imgAttributes.src;
-    }
-    if (imgAttributes.sizes) {
-      link.imageSizes = imgAttributes.sizes;
-    }
-    if (imgAttributes.fetchPriority) {
-      link.fetchPriority = imgAttributes.fetchPriority;
-    }
-    if (imgAttributes.crossOrigin) {
-      link.crossOrigin = imgAttributes.crossOrigin;
-    }
-    if (imgAttributes.referrerPolicy) {
-      link.referrerPolicy = imgAttributes.referrerPolicy;
-    }
-    document.head.appendChild(link);
+  if (ReactDOM.preload) {
+    // React 19+: use the built-in preload API (synchronous, no DOM manipulation)
+    ReactDOM.preload(imgAttributes.src, opts);
+    return null;
+  }
 
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, [
-    imgAttributes.src,
-    imgAttributes.srcSet,
-    imgAttributes.sizes,
-    imgAttributes.fetchPriority,
-    imgAttributes.crossOrigin,
-    imgAttributes.referrerPolicy,
-  ]);
-
-  return null;
+  // React 18 fallback: render a <link> directly into <head> via portal
+  return ReactDOM.createPortal(
+    <link
+      rel="preload"
+      href={imgAttributes.srcSet ? undefined : imgAttributes.src}
+      imageSrcSet={imgAttributes.srcSet}
+      imageSizes={imgAttributes.sizes}
+      crossOrigin={imgAttributes.crossOrigin}
+      referrerPolicy={imgAttributes.referrerPolicy}
+      // @ts-expect-error -- React 18 uses lowercase
+      fetchpriority={imgAttributes.fetchPriority}
+      as="image"
+    />,
+    document.head,
+  );
 }
 
 /**

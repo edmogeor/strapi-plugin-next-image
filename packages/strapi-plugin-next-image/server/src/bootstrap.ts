@@ -1,7 +1,18 @@
 import type { Core } from '@strapi/types';
+import type { InvalidateConfig } from './services/cache';
 
 function getService(strapi: Core.Strapi, name: string) {
   return strapi.plugin('next-image').service(name);
+}
+
+function invalidateCacheForUrl(strapi: Core.Strapi, url: string) {
+  try {
+    const config = strapi.config.get('plugin::next-image') as InvalidateConfig;
+    const cacheService = getService(strapi, 'cache');
+    cacheService.invalidateUrl(url, config);
+  } catch (err) {
+    strapi.log.error(`Failed to invalidate cache for ${url}:`, err);
+  }
 }
 
 async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl: string, mime: string) {
@@ -58,9 +69,22 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
       if (!result?.id || !result?.url || !result?.mime?.startsWith('image/')) {
         return;
       }
-      // Regenerate if the file URL changed (file was replaced)
+
+      // Always invalidate cache — file content may have changed even if URL didn't
+      // (e.g. Strapi's "replace file" feature keeps the same URL)
+      invalidateCacheForUrl(strapi, result.url);
+
+      // If URL changed, also purge old URL's variants and regenerate blur
       if (event.state.oldUrl && event.state.oldUrl !== result.url) {
+        invalidateCacheForUrl(strapi, event.state.oldUrl);
         generateAndSaveBlur(strapi, result.id, result.url, result.mime);
+      }
+    },
+
+    afterDelete(event) {
+      const { result } = event;
+      if (result?.url && result?.mime?.startsWith('image/')) {
+        invalidateCacheForUrl(strapi, result.url);
       }
     },
   });

@@ -40,8 +40,37 @@ function parseCacheFilename(filename: string): CacheMetadata | null {
   };
 }
 
+export interface InvalidateConfig {
+  deviceSizes: number[];
+  imageSizes: number[];
+  qualities: number[];
+  formats: string[];
+}
+
 export default () => ({
   getCacheDir,
+  getCacheKey,
+
+  invalidateUrl(url: string, config: InvalidateConfig): void {
+    const cacheDir = getCacheDir();
+    if (!fs.existsSync(cacheDir)) return;
+
+    const allWidths = [...config.deviceSizes, ...config.imageSizes];
+    const formatKeys = [
+      ...config.formats.map((f) => f.replace('image/', '')),
+      'original',
+    ];
+
+    for (const width of allWidths) {
+      for (const quality of config.qualities) {
+        for (const format of formatKeys) {
+          const key = getCacheKey(url, width, quality, format);
+          const entryDir = path.join(cacheDir, key);
+          fs.rmSync(entryDir, { recursive: true, force: true });
+        }
+      }
+    }
+  },
 
   async get(
     url: string,
