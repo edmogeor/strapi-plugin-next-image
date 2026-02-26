@@ -53,13 +53,7 @@ function warnOnce(msg: string): void {
 function getDynamicProps(
   fetchPriority?: string
 ): Record<string, string | undefined> {
-  // React 19+ supports camelCase fetchPriority.
-  // React 18 requires lowercase fetchpriority.
-  // Check for React.use which was added in React 19.
-  if ('use' in React) {
-    return { fetchPriority };
-  }
-  return { fetchpriority: fetchPriority };
+  return { fetchPriority };
 }
 
 // See https://stackoverflow.com/q/39777833/266535 for why we use this ref
@@ -307,36 +301,15 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
 ImageElement.displayName = 'ImageElement';
 
 function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
-  const opts: ReactDOM.PreloadOptions = {
+  ReactDOM.preload(imgAttributes.src, {
     as: 'image',
     imageSrcSet: imgAttributes.srcSet,
     imageSizes: imgAttributes.sizes,
     crossOrigin: imgAttributes.crossOrigin,
     referrerPolicy: imgAttributes.referrerPolicy,
     fetchPriority: imgAttributes.fetchPriority,
-  };
-
-  if (ReactDOM.preload) {
-    // React 19+: use the built-in preload API (synchronous, no DOM manipulation)
-    ReactDOM.preload(imgAttributes.src, opts);
-    return null;
-  }
-
-  // React 18 fallback: render a <link> directly into <head> via portal
-  return ReactDOM.createPortal(
-    <link
-      rel="preload"
-      href={imgAttributes.srcSet ? undefined : imgAttributes.src}
-      imageSrcSet={imgAttributes.srcSet}
-      imageSizes={imgAttributes.sizes}
-      crossOrigin={imgAttributes.crossOrigin}
-      referrerPolicy={imgAttributes.referrerPolicy}
-      // @ts-expect-error -- React 18 uses lowercase
-      fetchpriority={imgAttributes.fetchPriority}
-      as="image"
-    />,
-    document.head,
-  );
+  });
+  return null;
 }
 
 /**
