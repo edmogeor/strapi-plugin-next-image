@@ -147,7 +147,20 @@ const loader = createStrapiLoader('https://cms.example.com');
 
 
 
-### Strapi Plugin
+### Frontend (React)
+
+To keep your frontend breakpoints perfectly synchronized with your backend configuration without manual copying, call `initializeStrapiImage()` once at your app's entry point (e.g., `main.tsx` or `_app.tsx`). 
+
+This fetches the allowed `deviceSizes`, `imageSizes`, and `formats` directly from the Strapi API and applies them globally:
+
+```ts
+import { initializeStrapiImage } from 'strapi-next-image';
+
+// Fetch config from Strapi before React renders
+await initializeStrapiImage('https://cms.example.com');
+```
+
+If you do not call this function, the component will safely fall back to the standard Next.js default breakpoints.
 
 Configure in `config/plugins.ts`:
 

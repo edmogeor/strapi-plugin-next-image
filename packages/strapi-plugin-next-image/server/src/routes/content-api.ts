@@ -10,5 +10,14 @@ export default {
         policies: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/config',
+      handler: 'config.get',
+      config: {
+        auth: false,
+        policies: [],
+      },
+    },
   ],
 };

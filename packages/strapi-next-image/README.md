@@ -32,6 +32,19 @@ Pass a `StrapiMedia` object to `src` and the component extracts `width`, `height
 
 
 
+## Configuration
+
+By default, the component uses standard Next.js default breakpoints. 
+
+To keep your frontend breakpoints mapped securely to your Strapi backend configuration, call `initializeStrapiImage()` once at your app's entry point to fetch the config synchronously from the Strapi server:
+
+```ts
+import { initializeStrapiImage } from 'strapi-next-image';
+
+// Fetch config from Strapi before React renders
+await initializeStrapiImage('https://cms.example.com');
+```
+
 ## `getImageProps`
 
 Compute optimized image URLs without rendering a component:
