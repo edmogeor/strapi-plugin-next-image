@@ -98,20 +98,27 @@ function App() {
       </Section>
 
       <Section title="4. Blur Placeholder" description="Image with blurDataURL — observe the fade-in transition">
-        <Image
-          src={first}
-          alt={first.alternativeText || first.name}
-          sizes="(max-width: 768px) 100vw, 600px"
-          placeholder="blur"
-        />
+        {first.blurDataURL ? (
+          <Image
+            src={first}
+            alt={first.alternativeText || first.name}
+            sizes="(max-width: 768px) 100vw, 600px"
+            placeholder="blur"
+          />
+        ) : (
+          <p className="description">
+            No blurDataURL on this image. Upload a new image via the Strapi admin
+            — the plugin generates blur placeholders automatically on upload.
+          </p>
+        )}
       </Section>
 
-      <Section title="5. Custom Quality" description="Image rendered at quality={90}">
+      <Section title="5. Custom Quality" description="Image rendered at quality={75}">
         <Image
           src={first}
           alt={first.alternativeText || first.name}
           sizes="(max-width: 768px) 100vw, 600px"
-          quality={90}
+          quality={75}
         />
       </Section>
 
@@ -170,11 +177,14 @@ function GetImagePropsDemo({ media }: { media: StrapiFile }) {
     sizes: '(max-width: 768px) 100vw, 600px',
   });
 
+  // Remove fetchPriority to avoid React 18 DOM warning
+  const { fetchPriority: _, ...imgProps } = props;
+
   return (
     <div>
       <picture>
-        <source srcSet={props.srcSet} sizes={props.sizes} />
-        <img {...props} />
+        <source srcSet={imgProps.srcSet} sizes={imgProps.sizes} />
+        <img {...imgProps} />
       </picture>
       <details>
         <summary>Generated props</summary>

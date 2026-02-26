@@ -2,7 +2,7 @@ import type { Core } from '@strapi/types';
 import type { Context } from 'koa';
 
 function getService(strapi: Core.Strapi, name: string) {
-  return strapi.plugin('image-optimize').service(name);
+  return strapi.plugin('next-image').service(name);
 }
 
 /**
@@ -40,7 +40,7 @@ const controller: Core.Controller = {
     }
 
     // --- Load plugin config ---
-    const pluginConfig = strapi.config.get('plugin::image-optimize') as {
+    const pluginConfig = strapi.config.get('plugin::next-image') as {
       deviceSizes: number[];
       imageSizes: number[];
       qualities: number[];
@@ -89,7 +89,7 @@ const controller: Core.Controller = {
 
     // --- Call the optimization service ---
     try {
-      const optimizeService = getService(strapi, 'image-optimize');
+      const optimizeService = getService(strapi, 'next-image');
       const result = await optimizeService.optimize({
         url,
         width,
@@ -101,10 +101,13 @@ const controller: Core.Controller = {
 
       // Set response headers
       ctx.set('Content-Type', result.contentType);
+
+      const isDev = process.env.NODE_ENV !== 'production';
       ctx.set(
         'Cache-Control',
-        `public, max-age=${pluginConfig.minimumCacheTTL}, immutable`
+        `public, max-age=${isDev ? 0 : pluginConfig.minimumCacheTTL}, must-revalidate`
       );
+
       if (result.etag) {
         ctx.set('ETag', result.etag);
       }

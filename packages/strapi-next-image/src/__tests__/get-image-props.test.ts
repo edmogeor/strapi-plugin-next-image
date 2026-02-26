@@ -3,7 +3,7 @@ import { getImageProps } from '../get-image-props';
 
 // Helper to build expected Strapi optimize URL
 function opt(src: string, w: number, q = 75) {
-  return `/api/image-optimize?url=${encodeURIComponent(src)}&w=${w}&q=${q}`;
+  return `/api/next-image?url=${encodeURIComponent(src)}&w=${w}&q=${q}`;
 }
 
 describe('getImageProps()', () => {

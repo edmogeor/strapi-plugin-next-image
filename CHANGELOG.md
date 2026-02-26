@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - `configure()` function for runtime image config overrides
   - Custom loader support via `createStrapiLoader()`
 - **strapi-plugin-next-image** — Strapi v5 plugin
-  - `GET /api/image-optimize` endpoint powered by Sharp
+  - `GET /api/next-image` endpoint powered by Sharp
   - On-the-fly resize and format conversion (WebP/AVIF)
   - Auto-generated base64 blur placeholders on upload
   - File-based cache with configurable TTL, ETags, and `Cache-Control: immutable`

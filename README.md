@@ -27,7 +27,7 @@ Drop in two packages — a Strapi plugin that serves optimized images via Sharp,
 
 | Package | Description |
 |---|---|
-| [`strapi-plugin-next-image`](./packages/strapi-plugin-next-image) | Strapi v5 plugin — exposes `GET /api/image-optimize` powered by Sharp |
+| [`strapi-plugin-next-image`](./packages/strapi-plugin-next-image) | Strapi v5 plugin — exposes `GET /api/next-image` powered by Sharp |
 | [`strapi-next-image`](./packages/strapi-next-image) | React `<Image />` component — drop-in `next/image` replacement |
 
 ---
@@ -41,7 +41,7 @@ npm install strapi-plugin-next-image
 npm run build   # rebuild admin panel
 ```
 
-The plugin auto-registers the `/api/image-optimize` endpoint and starts generating blur placeholders for every new upload.
+The plugin auto-registers the `/api/next-image` endpoint and starts generating blur placeholders for every new upload.
 
 ### 2. Frontend (React)
 
@@ -177,7 +177,7 @@ Configure in `config/plugins.ts`:
 
 ```ts
 export default {
-  'image-optimize': {
+  'next-image': {
     config: {
       deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
       imageSizes: [32, 48, 64, 96, 128, 256, 384],
@@ -204,7 +204,7 @@ export default {
 ### API Endpoint
 
 ```
-GET /api/image-optimize?url=/uploads/file.jpg&w=1080&q=75&f=webp
+GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 ```
 
 | Param | Required | Description |
@@ -214,7 +214,7 @@ GET /api/image-optimize?url=/uploads/file.jpg&w=1080&q=75&f=webp
 | `q` | No | Quality 1–100 (default 75) |
 | `f` | No | Format override (`webp`, `avif`) |
 
-Responds with optimized binary image data, `Cache-Control: public, max-age={TTL}, immutable`, and an `ETag` for conditional requests.
+Responds with optimized binary image data, `Cache-Control: public, max-age={isDev ? 0 : TTL}, must-revalidate`, and an `ETag` for conditional requests.
 
 ---
 

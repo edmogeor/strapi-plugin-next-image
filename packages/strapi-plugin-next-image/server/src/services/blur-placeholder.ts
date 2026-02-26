@@ -77,7 +77,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       return null;
     }
 
-    const pluginConfig = strapi.config.get('plugin::image-optimize') as {
+    const pluginConfig = strapi.config.get('plugin::next-image') as {
       blurSize?: number;
     };
     const blurSize = pluginConfig.blurSize || 8;

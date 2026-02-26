@@ -12,7 +12,7 @@ describe('strapiLoader (default)', () => {
       width: 640,
     });
     expect(url).toBe(
-      '/api/image-optimize?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
+      '/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
     );
   });
 
@@ -60,7 +60,7 @@ describe('createStrapiLoader()', () => {
       width: 640,
     });
     expect(url).toBe(
-      'http://localhost:1337/api/image-optimize?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
+      'http://localhost:1337/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
     );
   });
 

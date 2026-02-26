@@ -7,6 +7,7 @@ export interface CacheEntry {
   contentType: string;
   etag: string;
   extension: string;
+  isStale: boolean;
 }
 
 interface CacheMetadata {
@@ -17,7 +18,7 @@ interface CacheMetadata {
 }
 
 function getCacheDir(): string {
-  return path.join(process.cwd(), '.cache', 'image-optimize');
+  return path.join(process.cwd(), '.cache', 'next-image');
 }
 
 function getCacheKey(url: string, width: number, quality: number, format: string): string {
@@ -66,13 +67,8 @@ export default () => ({
       return null;
     }
 
-    // Check if expired
     const now = Date.now();
-    if (now > meta.expireAt) {
-      // Clean up expired entry
-      fs.rmSync(entryDir, { recursive: true, force: true });
-      return null;
-    }
+    const isStale = now > meta.expireAt;
 
     const filePath = path.join(entryDir, filename);
     const buffer = fs.readFileSync(filePath);
@@ -92,6 +88,7 @@ export default () => ({
       contentType: extToContentType[meta.extension] || 'application/octet-stream',
       etag: meta.etag,
       extension: meta.extension,
+      isStale,
     };
   },
 

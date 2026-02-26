@@ -1,7 +1,7 @@
 import type { Core } from '@strapi/types';
 
 function getService(strapi: Core.Strapi, name: string) {
-  return strapi.plugin('image-optimize').service(name);
+  return strapi.plugin('next-image').service(name);
 }
 
 async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl: string, mime: string) {
@@ -23,13 +23,13 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
   // Initialize default plugin settings in the store if not already set
   const pluginStore = strapi.store({
     type: 'plugin',
-    name: 'image-optimize',
+    name: 'next-image',
   });
 
   const existingConfig = await pluginStore.get({ key: 'settings' });
 
   if (!existingConfig) {
-    const defaultConfig = strapi.config.get('plugin::image-optimize') as Record<string, unknown>;
+    const defaultConfig = strapi.config.get('plugin::next-image') as Record<string, unknown>;
     await pluginStore.set({
       key: 'settings',
       value: defaultConfig,

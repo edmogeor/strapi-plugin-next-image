@@ -15,10 +15,10 @@ export default () => ({
     'content-api': routes,
   },
   controllers: {
-    'image-optimize': controllers,
+    'next-image': controllers,
   },
   services: {
-    'image-optimize': imageOptimizeService,
+    'next-image': imageOptimizeService,
     cache: cacheService,
     'blur-placeholder': blurPlaceholderService,
   },

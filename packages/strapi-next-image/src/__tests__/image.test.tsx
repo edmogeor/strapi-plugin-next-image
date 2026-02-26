@@ -16,7 +16,7 @@ describe('<Image /> component', () => {
     expect(img.getAttribute('data-nimg')).toBe('1');
     expect(img.getAttribute('decoding')).toBe('async');
     expect(img.getAttribute('loading')).toBe('lazy');
-    expect(img.getAttribute('src')).toContain('/api/image-optimize');
+    expect(img.getAttribute('src')).toContain('/api/next-image');
     expect(img.getAttribute('srcset')).toBeTruthy();
   });
 

@@ -19,7 +19,7 @@ export interface OptimizeResult {
 }
 
 function getService(strapi: Core.Strapi, name: string) {
-  return strapi.plugin('image-optimize').service(name);
+  return strapi.plugin('next-image').service(name);
 }
 
 /**
@@ -108,7 +108,15 @@ function getExtFromMime(mime: string): string {
   return map[mime] || 'bin';
 }
 
+// Track in-flight revalidations to avoid duplicate work
+const revalidating = new Set<string>();
+
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
+  /**
+   * Optimize an image: resize, convert format, and cache the result.
+   * Uses stale-while-revalidate: expired cache entries are served immediately
+   * while a background re-optimization refreshes the cache for the next request.
+   */
   async optimize(params: OptimizeParams): Promise<OptimizeResult> {
     const { url, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } = params;
 
@@ -120,6 +128,16 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     // --- Check cache ---
     const cached = await cacheService.get(url, width, quality, formatKey);
     if (cached) {
+      // Stale-while-revalidate: serve the stale entry immediately,
+      // then re-optimize in the background so the next request gets fresh data.
+      if (cached.isStale) {
+        const revalKey = `${url}|${width}|${quality}|${formatKey}`;
+        if (!revalidating.has(revalKey)) {
+          revalidating.add(revalKey);
+          this._revalidate(params).finally(() => revalidating.delete(revalKey));
+        }
+      }
+
       const basename = path.basename(url, path.extname(url));
       return {
         buffer: cached.buffer,
@@ -128,6 +146,31 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         filename: `${basename}.${cached.extension}`,
       };
     }
+
+    // --- No cache entry — optimize synchronously ---
+    return this._optimizeAndCache(params);
+  },
+
+  /**
+   * Background revalidation: re-optimize and update the cache.
+   * Errors are logged but never propagated to the caller.
+   */
+  async _revalidate(params: OptimizeParams): Promise<void> {
+    try {
+      await this._optimizeAndCache(params);
+    } catch (err) {
+      strapi.log.error('Background revalidation failed:', err);
+    }
+  },
+
+  /**
+   * Read the original file, optimize it with Sharp, and write to cache.
+   */
+  async _optimizeAndCache(params: OptimizeParams): Promise<OptimizeResult> {
+    const { url, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } = params;
+
+    const cacheService = getService(strapi, 'cache');
+    const formatKey = outputFormat || 'original';
 
     // --- Read original image from uploads directory ---
     const uploadsDir = path.join(process.cwd(), 'public');

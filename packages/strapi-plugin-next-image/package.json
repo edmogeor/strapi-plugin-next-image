@@ -1,7 +1,7 @@
 {
   "name": "strapi-plugin-next-image",
   "version": "0.1.0",
-  "description": "A Strapi v5 plugin providing an on-the-fly image optimization endpoint for the strapi-next-image component.",
+  "description": "A Strapi v5 plugin that serves optimized images via Sharp for the strapi-next-image React component.",
   "author": "edmogeor",
   "repository": {
     "type": "git",
@@ -19,8 +19,8 @@
   ],
   "license": "MIT",
   "strapi": {
-    "displayName": "Image Optimize",
-    "name": "image-optimize",
+    "displayName": "Next Image",
+    "name": "next-image",
     "description": "On-the-fly image optimization endpoint for Strapi",
     "kind": "plugin"
   },

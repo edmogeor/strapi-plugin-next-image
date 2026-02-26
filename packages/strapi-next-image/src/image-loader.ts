@@ -4,7 +4,7 @@ const DEFAULT_QUALITY = 75;
 
 function buildOptimizeUrl(base: string, src: string, width: number, quality?: number): string {
   const q = quality || DEFAULT_QUALITY;
-  return `${base}/api/image-optimize?url=${encodeURIComponent(src)}&w=${width}&q=${q}`;
+  return `${base}/api/next-image?url=${encodeURIComponent(src)}&w=${width}&q=${q}`;
 }
 
 /**

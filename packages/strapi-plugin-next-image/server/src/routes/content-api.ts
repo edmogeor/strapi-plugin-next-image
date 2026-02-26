@@ -4,7 +4,7 @@ export default {
     {
       method: 'GET',
       path: '/',
-      handler: 'image-optimize.optimize',
+      handler: 'next-image.optimize',
       config: {
         auth: false,
         policies: [],
