@@ -76,6 +76,20 @@ h1 {
   overflow: hidden;
 }
 
+.blur-demo-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+.blur-demo-btn:hover {
+  background: #555;
+}
+
 details {
   margin-top: 0.75rem;
 }

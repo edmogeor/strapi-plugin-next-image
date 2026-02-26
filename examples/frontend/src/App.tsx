@@ -59,7 +59,6 @@ function App() {
   }
 
   const first = files[0];
-  const second = files.length > 1 ? files[1] : first;
 
   return (
     <div className="app">
@@ -90,21 +89,16 @@ function App() {
 
       <Section title="3. Priority / Preload" description="Image with priority prop (check <head> for <link rel='preload'>)">
         <Image
-          src={second}
-          alt={second.alternativeText || second.name}
+          src={first}
+          alt={first.alternativeText || first.name}
           sizes="(max-width: 768px) 100vw, 600px"
           priority
         />
       </Section>
 
-      <Section title="4. Blur Placeholder" description="Image with blurDataURL — observe the fade-in transition">
+      <Section title="4. Blur Placeholder" description="Click the button to load — watch the blur fade into the sharp image">
         {first.blurDataURL ? (
-          <Image
-            src={first}
-            alt={first.alternativeText || first.name}
-            sizes="(max-width: 768px) 100vw, 600px"
-            placeholder="blur"
-          />
+          <BlurDemo media={first} />
         ) : (
           <p className="description">
             No blurDataURL on this image. Upload a new image via the Strapi admin
@@ -170,6 +164,23 @@ function Section({
   );
 }
 
+function BlurDemo({ media }: { media: StrapiFile }) {
+  const [show, setShow] = useState(false);
+
+  return show ? (
+    <Image
+      src={media}
+      alt={media.alternativeText || media.name}
+      sizes="(max-width: 768px) 100vw, 600px"
+      placeholder="blur"
+    />
+  ) : (
+    <button onClick={() => setShow(true)} className="blur-demo-btn">
+      Load Image
+    </button>
+  );
+}
+
 function GetImagePropsDemo({ media }: { media: StrapiFile }) {
   const { props } = getImageProps({
     src: media,
@@ -177,7 +188,6 @@ function GetImagePropsDemo({ media }: { media: StrapiFile }) {
     sizes: '(max-width: 768px) 100vw, 600px',
   });
 
-  // Remove fetchPriority to avoid React 18 DOM warning
   const { fetchPriority: _, ...imgProps } = props;
 
   return (

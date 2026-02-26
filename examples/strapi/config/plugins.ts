@@ -1,4 +1,9 @@
 export default {
+  upload: {
+    config: {
+      sizeOptimization: false,
+    },
+  },
   'next-image': {
     enabled: true,
     config: {
