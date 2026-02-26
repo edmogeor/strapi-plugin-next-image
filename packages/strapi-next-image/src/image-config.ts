@@ -9,23 +9,4 @@ export const imageConfigDefault: ImageConfigComplete = {
   unoptimized: false,
 };
 
-let imageConfig: ImageConfigComplete = { ...imageConfigDefault };
 
-/**
- * Override the default image configuration.
- * Call once at your app's entry point (e.g. `_app.tsx` or `layout.tsx`).
- *
- * @example
- * ```ts
- * import { configure } from 'strapi-next-image';
- * configure({ deviceSizes: [640, 1080, 1920], qualities: [80] });
- * ```
- */
-export function configure(overrides: Partial<ImageConfigComplete>): void {
-  imageConfig = { ...imageConfigDefault, ...overrides };
-}
-
-/** Return the current (possibly user-configured) image config. */
-export function getImageConfig(): ImageConfigComplete {
-  return imageConfig;
-}

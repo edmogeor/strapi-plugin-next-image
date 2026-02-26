@@ -21,7 +21,7 @@ import type {
   OnLoad,
   OnLoadingComplete,
 } from './types';
-import { getImageConfig } from './image-config';
+import { imageConfigDefault } from './image-config';
 import defaultLoader from './image-loader';
 
 type ImgElementWithDataProp = HTMLImageElement & {
@@ -354,7 +354,7 @@ function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
 export const Image = forwardRef<HTMLImageElement | null, ImageProps>(
   (props, forwardedRef) => {
     const config = useMemo(() => {
-      const c = getImageConfig();
+      const c = imageConfigDefault;
       const allSizes = [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b);
       const deviceSizes = c.deviceSizes.sort((a, b) => a - b);
       const qualities = c.qualities?.sort((a, b) => a - b);

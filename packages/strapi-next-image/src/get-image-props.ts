@@ -1,5 +1,5 @@
 import { getImgProps } from './get-img-props';
-import { getImageConfig } from './image-config';
+import { imageConfigDefault } from './image-config';
 import defaultLoader from './image-loader';
 import type { ImageProps } from './types';
 
@@ -23,6 +23,6 @@ import type { ImageProps } from './types';
 export function getImageProps(imageProps: ImageProps) {
   return getImgProps(imageProps, {
     defaultLoader,
-    imgConf: getImageConfig(),
+    imgConf: imageConfigDefault,
   });
 }
