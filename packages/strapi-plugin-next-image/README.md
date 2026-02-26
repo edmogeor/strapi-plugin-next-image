@@ -50,6 +50,8 @@ export default {
 
 ## API
 
+### Image Optimization
+
 ```
 GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 ```
@@ -60,6 +62,14 @@ GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 | `w` | Yes | Width — must be in `deviceSizes` or `imageSizes` |
 | `q` | No | Quality 1–100 (default 75) |
 | `f` | No | Format override (`webp`, `avif`) |
+
+### Configuration
+
+```
+GET /api/next-image/config
+```
+
+Returns the current public configuration for the plugin, including allowed dimensions and formats. This is used by the frontend `<Image />` component to automatically synchronize its default setup without manual configuration mirroring.
 
 ## Frontend
 
