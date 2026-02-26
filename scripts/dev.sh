@@ -3,6 +3,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# Use Node 22 via nvm if available (Strapi v5 requires Node <=22)
+if [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+  unset NPM_CONFIG_PREFIX 2>/dev/null || true
+  source "${NVM_DIR:-$HOME/.nvm}/nvm.sh"
+  nvm use 22 2>/dev/null || echo "Warning: Node 22 not installed via nvm, using $(node -v)"
+fi
+
 # Install dependencies if needed
 if [ ! -d "$ROOT/examples/strapi/node_modules" ]; then
   echo "Installing Strapi dependencies..."
