@@ -25,3 +25,11 @@ out/
 # Misc
 references/
 coverage/
+
+# Examples — generated files
+examples/strapi/.tmp/
+examples/strapi/dist/
+examples/strapi/build/
+examples/strapi/.cache/
+examples/strapi/public/uploads/
+examples/strapi/data/

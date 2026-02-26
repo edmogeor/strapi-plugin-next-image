@@ -8,6 +8,9 @@ export { getImageProps } from './get-image-props';
 // Configuration
 export { configure } from './image-config';
 
+// Loader
+export { createStrapiLoader } from './image-loader';
+
 // Types
 export type {
   StrapiMedia,

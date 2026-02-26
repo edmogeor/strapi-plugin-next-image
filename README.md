@@ -228,6 +228,29 @@ npm run build --workspaces
 npm run test --workspaces
 ```
 
+### Visual Testing
+
+The `examples/` directory contains a test Strapi app and a Vite + React frontend for manually testing the full stack.
+
+```bash
+# Start both Strapi and the frontend in one command
+npm run dev
+```
+
+Or run them separately:
+
+```bash
+# Terminal 1 — Strapi backend
+cd examples/strapi && npm install && npm run develop
+
+# Terminal 2 — React frontend
+cd examples/frontend && npm install && npm run dev
+```
+
+1. Create an admin account at `http://localhost:1337/admin`
+2. Upload images via the Media Library
+3. Open `http://localhost:5173` to see all component features in action
+
 ---
 
 ## Attribution

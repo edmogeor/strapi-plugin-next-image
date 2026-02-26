@@ -1,0 +1,22 @@
+{
+  "name": "example-strapi",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/strapi": "^5.0.0",
+    "@strapi/plugin-upload": "^5.0.0",
+    "@strapi/plugin-users-permissions": "^5.0.0",
+    "better-sqlite3": "^11.0.0",
+    "sharp": "^0.34.0",
+    "strapi-plugin-next-image": "file:../../packages/strapi-plugin-next-image"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

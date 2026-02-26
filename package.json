@@ -5,6 +5,7 @@
         "packages/*"
     ],
     "scripts": {
+        "dev": "./scripts/dev.sh",
         "release": "./scripts/release.sh"
     }
 }
