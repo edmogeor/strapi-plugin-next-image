@@ -6,6 +6,7 @@ export default {
     formats: ['image/webp'] as string[],
     minimumCacheTTL: 14400, // 4 hours in seconds
     dangerouslyAllowSVG: false,
+    blurSize: 8, // width in pixels for blur placeholder thumbnails
   },
   validator(config: Record<string, unknown>) {
     if (config.deviceSizes && !Array.isArray(config.deviceSizes)) {
@@ -19,6 +20,9 @@ export default {
     }
     if (config.minimumCacheTTL && typeof config.minimumCacheTTL !== 'number') {
       throw new Error('minimumCacheTTL must be a number');
+    }
+    if (config.blurSize && typeof config.blurSize !== 'number') {
+      throw new Error('blurSize must be a number');
     }
   },
 };
