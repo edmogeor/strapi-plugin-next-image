@@ -1,3 +1,8 @@
+/**
+ * Ported from Next.js get-img-props.ts with Strapi-specific adaptations.
+ * Original source: https://github.com/vercel/next.js
+ * Copyright (c) 2024 Vercel, Inc. — MIT License
+ */
 import { getImageBlurSvg } from './image-blur-svg';
 import { imageConfigDefault } from './image-config';
 import {

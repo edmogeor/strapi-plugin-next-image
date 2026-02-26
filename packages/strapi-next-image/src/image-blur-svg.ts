@@ -1,6 +1,7 @@
 /**
- * A shared function to generate a SVG blur placeholder.
  * Ported from Next.js image-blur-svg.ts.
+ * Original source: https://github.com/vercel/next.js
+ * Copyright (c) 2024 Vercel, Inc. — MIT License
  */
 export function getImageBlurSvg({
   widthInt,

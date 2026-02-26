@@ -1,3 +1,8 @@
+/**
+ * Adapted from the Next.js Image component.
+ * Original source: https://github.com/vercel/next.js
+ * Copyright (c) 2024 Vercel, Inc. — MIT License
+ */
 'use client';
 
 import React, {

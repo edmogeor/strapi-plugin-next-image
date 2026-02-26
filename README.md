@@ -230,6 +230,10 @@ npm run test --workspaces
 
 ---
 
+## Attribution
+
+The `strapi-next-image` React component includes code ported from and adapted from the [Next.js](https://github.com/vercel/next.js) Image component by Vercel, Inc., licensed under the MIT License. See [NOTICE](./NOTICE) for details.
+
 ## License
 
 [MIT](./LICENSE)

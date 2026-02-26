@@ -72,6 +72,10 @@ This package is designed to work with the [strapi-plugin-next-image](https://www
 
 For full documentation, configuration reference, and API details, see the [monorepo README](https://github.com/edmogeor/strapi-plugin-next-image#readme).
 
+## Attribution
+
+This package includes code ported from and adapted from the [Next.js](https://github.com/vercel/next.js) Image component by Vercel, Inc., licensed under the MIT License. See [NOTICE](https://github.com/edmogeor/strapi-plugin-next-image/blob/main/NOTICE) for details.
+
 ## License
 
 [MIT](https://github.com/edmogeor/strapi-plugin-next-image/blob/main/LICENSE)
