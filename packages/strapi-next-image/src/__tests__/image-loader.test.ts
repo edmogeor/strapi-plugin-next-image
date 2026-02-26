@@ -66,7 +66,6 @@ describe('createStrapiLoader()', () => {
   it('prepends base URL', () => {
     const loader = createStrapiLoader('http://localhost:1337');
     const url = loader({
-      config: dummyConfig,
       src: '/uploads/photo.jpg',
       width: 640,
     });
@@ -78,7 +77,6 @@ describe('createStrapiLoader()', () => {
   it('strips trailing slash from base URL', () => {
     const loader = createStrapiLoader('http://example.com/');
     const url = loader({
-      config: dummyConfig,
       src: '/test.png',
       width: 100,
     });

@@ -1,4 +1,4 @@
-import type { ImageLoaderProps, ImageLoaderWithConfig, ImageConfig } from './types';
+import type { ImageLoader, ImageLoaderProps, ImageLoaderWithConfig, ImageConfig } from './types';
 
 const DEFAULT_QUALITY = 75;
 
@@ -23,11 +23,11 @@ export default strapiLoader as ImageLoaderWithConfig;
 /**
  * Create a loader with a custom Strapi base URL.
  */
-export function createStrapiLoader(strapiUrl: string): ImageLoaderWithConfig {
+export function createStrapiLoader(strapiUrl: string): ImageLoader {
   const base = strapiUrl.replace(/\/$/, '');
-  const loader: ImageLoaderWithConfig & { __strapi_img_default: true } =
+  const loader: ImageLoader & { __strapi_img_default: true } =
     Object.assign(
-      ({ src, width, quality }: ImageLoaderProps & { config: unknown }): string =>
+      ({ src, width, quality }: ImageLoaderProps): string =>
         buildOptimizeUrl(base, src, width, quality),
       { __strapi_img_default: true as const }
     );
