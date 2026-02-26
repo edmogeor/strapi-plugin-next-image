@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import defaultLoader, { createStrapiLoader } from '../image-loader';
 import type { ImageConfig } from '../types';
 
-const dummyConfig = {} as ImageConfig;
+const dummyConfig = { path: '' } as ImageConfig;
 
 describe('strapiLoader (default)', () => {
   it('generates correct URL format', () => {
@@ -24,6 +24,17 @@ describe('strapiLoader (default)', () => {
     });
     expect(url).toContain(
       `url=${encodeURIComponent('/uploads/my photo (1).jpg')}`
+    );
+  });
+
+  it('prepends config.path automatically if available', () => {
+    const url = defaultLoader({
+      config: { ...dummyConfig, path: 'https://cms.mywebsite.com' },
+      src: '/uploads/photo.jpg',
+      width: 640,
+    });
+    expect(url).toBe(
+      'https://cms.mywebsite.com/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
     );
   });
 
