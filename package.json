@@ -1,0 +1,7 @@
+{
+    "name": "strapi-image",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "strapi-plugin-next-image",
+  "version": "0.1.0",
+  "description": "A Strapi v5 plugin providing an on-the-fly image optimization endpoint for the strapi-next-image component.",
+  "author": "George Edmonds",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edmogeor/strapi-plugin-next-image.git",
+    "directory": "packages/strapi-plugin-next-image"
+  },
+  "bugs": {
+    "url": "https://github.com/edmogeor/strapi-plugin-next-image/issues"
+  },
+  "homepage": "https://github.com/edmogeor/strapi-plugin-next-image#readme",
+  "keywords": [
+    "strapi",
+    "plugin",
+    "image-optimization"
+  ],
+  "license": "MIT",
+  "strapi": {
+    "displayName": "Image Optimize",
+    "name": "image-optimize",
+    "description": "On-the-fly image optimization endpoint for Strapi",
+    "kind": "plugin"
+  },
+  "type": "commonjs",
+  "exports": {
+    "./strapi-server": {
+      "types": "./dist/server/src/index.d.ts",
+      "source": "./server/src/index.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "strapi-plugin build",
+    "verify": "strapi-plugin verify",
+    "watch": "strapi-plugin watch"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@strapi/strapi": "^5.0.0",
+    "sharp": ">=0.32.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@strapi/sdk-plugin": "^5.0.0",
+    "@strapi/strapi": "^5.0.0",
+    "@strapi/types": "^5.0.0",
+    "sharp": "^0.34.0",
+    "typescript": "^5.0.0"
+  }
+}
