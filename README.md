@@ -145,6 +145,32 @@ const loader = createStrapiLoader('https://cms.example.com');
 
 ## Configuration
 
+### Frontend (React)
+
+Customize the image breakpoints, quality, and format settings used by the `<Image>` component and `getImageProps()`. Call `configure()` once at your app's entry point (e.g. `_app.tsx`, `layout.tsx`, or `main.tsx`) before any images render:
+
+```ts
+import { configure } from 'strapi-next-image';
+
+configure({
+  deviceSizes: [640, 1080, 1920],
+  imageSizes: [64, 256],
+  qualities: [80],
+  formats: ['image/avif', 'image/webp'],
+});
+```
+
+Any field you omit keeps its default value.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `deviceSizes` | `number[]` | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints for responsive `srcSet` generation |
+| `imageSizes` | `number[]` | `[32, 48, 64, 96, 128, 256, 384]` | Fixed-width sizes for non-responsive images |
+| `qualities` | `number[]` | `[75]` | Allowed quality values |
+| `formats` | `string[]` | `['image/webp']` | Output formats passed to the optimization endpoint |
+| `dangerouslyAllowSVG` | `boolean` | `false` | Allow SVG passthrough (skips optimization) |
+| `unoptimized` | `boolean` | `false` | Bypass optimization globally (serve original files) |
+
 ### Strapi Plugin
 
 Configure in `config/plugins.ts`:

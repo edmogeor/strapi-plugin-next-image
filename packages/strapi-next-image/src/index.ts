@@ -5,6 +5,9 @@ export { Image as default, Image } from './image';
 // Utility: compute image props without rendering (same as Next.js getImageProps)
 export { getImageProps } from './get-image-props';
 
+// Configuration
+export { configure } from './image-config';
+
 // Types
 export type {
   StrapiMedia,
