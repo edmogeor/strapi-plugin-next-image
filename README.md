@@ -50,8 +50,13 @@ npm install strapi-next-image
 ```
 
 ```tsx
+import { initializeStrapiImage } from 'strapi-next-image';
 import Image from 'strapi-next-image';
 
+// 1. Fetch config and auto-route to Strapi before React renders
+await initializeStrapiImage('https://cms.example.com');
+
+// 2. Render images anywhere in your app
 function Hero({ cover }) {
   return (
     <Image
