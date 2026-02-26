@@ -53,7 +53,7 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
 
     beforeUpdate(event) {
       // Stash the current URL so afterUpdate can detect file replacement
-      event.state.oldUrl = event.params?.data?.url;
+      (event.state as Record<string, unknown>).oldUrl = event.params?.data?.url;
     },
 
     afterCreate(event) {
@@ -75,8 +75,9 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
       invalidateCacheForUrl(strapi, result.url);
 
       // If URL changed, also purge old URL's variants and regenerate blur
-      if (event.state.oldUrl && event.state.oldUrl !== result.url) {
-        invalidateCacheForUrl(strapi, event.state.oldUrl);
+      const oldUrl = (event.state as Record<string, unknown>).oldUrl as string | undefined;
+      if (oldUrl && oldUrl !== result.url) {
+        invalidateCacheForUrl(strapi, oldUrl);
         generateAndSaveBlur(strapi, result.id, result.url, result.mime);
       }
     },
