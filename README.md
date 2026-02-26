@@ -130,16 +130,11 @@ const { props } = getImageProps({
 
 ### Custom Strapi URL
 
-If your Strapi server runs on a different origin, create a custom loader:
+If your Strapi server runs on a different origin (e.g., your frontend is on Vercel but Strapi is on AWS), you do **not** need to manually define a custom loader for every image. 
 
-```tsx
-import Image from 'strapi-next-image';
-import { createStrapiLoader } from 'strapi-next-image';
+Simply calling `initializeStrapiImage('https://cms.mywebsite.com')` (as shown in the Configuration section below) automatically configures the default global image loader to point at your Strapi backend securely!
 
-const loader = createStrapiLoader('https://cms.example.com');
-
-<Image src={cover} loader={loader} sizes="100vw" />
-```
+*(If you still need to manually create one for a one-off image, you can import and pass `loader={createStrapiLoader('https://cms.example.com')}` into the component).*
 
 ---
 

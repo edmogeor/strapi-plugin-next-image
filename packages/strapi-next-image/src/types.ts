@@ -40,6 +40,7 @@ export interface ImageConfigComplete {
   imageSizes: number[];
   qualities: number[] | undefined;
   formats: ImageFormat[];
+  path: string;
   dangerouslyAllowSVG: boolean;
   unoptimized: boolean;
 }

@@ -5,6 +5,7 @@ export let imageConfigDefault: ImageConfigComplete = {
   imageSizes: [32, 48, 64, 96, 128, 256, 384],
   qualities: [75],
   formats: ['image/webp'],
+  path: '',
   dangerouslyAllowSVG: false,
   unoptimized: false,
 };
@@ -31,6 +32,7 @@ export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
     // Merge the remote config heavily into our local defaults
     imageConfigDefault = {
       ...imageConfigDefault,
+      path: apiBaseUrl.replace(/\/$/, ''),
       ...(config.deviceSizes && { deviceSizes: config.deviceSizes }),
       ...(config.imageSizes && { imageSizes: config.imageSizes }),
       ...(config.qualities && { qualities: config.qualities }),

@@ -1,4 +1,4 @@
-import type { ImageLoaderProps, ImageLoaderWithConfig } from './types';
+import type { ImageLoaderProps, ImageLoaderWithConfig, ImageConfig } from './types';
 
 const DEFAULT_QUALITY = 75;
 
@@ -13,8 +13,8 @@ function buildOptimizeUrl(base: string, src: string, width: number, quality?: nu
  */
 const strapiLoader: ImageLoaderWithConfig & { __strapi_img_default: true } =
   Object.assign(
-    ({ src, width, quality }: ImageLoaderProps & { config: unknown }): string =>
-      buildOptimizeUrl('', src, width, quality),
+    ({ src, width, quality, config }: ImageLoaderProps & { config: Readonly<ImageConfig> }): string =>
+      buildOptimizeUrl(config?.path || '', src, width, quality),
     { __strapi_img_default: true as const }
   );
 
