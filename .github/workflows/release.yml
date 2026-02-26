@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -32,12 +33,12 @@ jobs:
         run: npm run test --workspaces
 
       - name: Publish strapi-plugin-next-image
-        run: npm publish --workspace=packages/strapi-plugin-next-image --access public
+        run: npm publish --workspace=packages/strapi-plugin-next-image --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish strapi-next-image
-        run: npm publish --workspace=packages/strapi-next-image --access public
+        run: npm publish --workspace=packages/strapi-next-image --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
