@@ -55,7 +55,7 @@ describe('initializeStrapiImage', () => {
         expect(imageConfigDefault.formats).toEqual(originalDefaults.formats);
     });
 
-    it('gracefully handles non-ok response without throwing or mutating defaults', async () => {
+    it('sets path immediately even when config fetch returns non-ok', async () => {
         global.fetch = vi.fn().mockResolvedValue({
             ok: false,
             status: 404,
@@ -66,10 +66,14 @@ describe('initializeStrapiImage', () => {
         await initializeStrapiImage('https://backend.test');
 
         expect(consoleSpy).toHaveBeenCalled();
-        expect(imageConfigDefault).toEqual(originalDefaults); // Should remain untouched
+        // path is set synchronously before the fetch, so images always point to Strapi
+        expect(imageConfigDefault.path).toBe('https://backend.test');
+        // breakpoint config remains at defaults since fetch failed
+        expect(imageConfigDefault.deviceSizes).toEqual(originalDefaults.deviceSizes);
+        expect(imageConfigDefault.formats).toEqual(originalDefaults.formats);
     });
 
-    it('gracefully handles network errors without throwing or mutating defaults', async () => {
+    it('sets path immediately even when network errors occur', async () => {
         global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
@@ -77,6 +81,23 @@ describe('initializeStrapiImage', () => {
         await initializeStrapiImage('https://backend.test');
 
         expect(consoleSpy).toHaveBeenCalled();
-        expect(imageConfigDefault).toEqual(originalDefaults); // Should remain untouched
+        // path is set synchronously before the fetch, so images always point to Strapi
+        expect(imageConfigDefault.path).toBe('https://backend.test');
+        // breakpoint config remains at defaults since fetch failed
+        expect(imageConfigDefault.deviceSizes).toEqual(originalDefaults.deviceSizes);
+        expect(imageConfigDefault.formats).toEqual(originalDefaults.formats);
+    });
+
+    it('sets path synchronously — works even without await', () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({}),
+        });
+
+        // Intentionally NOT awaiting — simulates fire-and-forget usage
+        initializeStrapiImage('https://cms.example.com');
+
+        // path must be set before the first render, even without await
+        expect(imageConfigDefault.path).toBe('https://cms.example.com');
     });
 });

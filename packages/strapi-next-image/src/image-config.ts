@@ -15,6 +15,12 @@ export let imageConfigDefault: ImageConfigComplete = {
  * Call this once at your application's entry point.
  */
 export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
+  // Set path immediately so images work even if the config fetch is not awaited
+  imageConfigDefault = {
+    ...imageConfigDefault,
+    path: apiBaseUrl.replace(/\/$/, ''),
+  };
+
   try {
     const url = new URL('/api/next-image/config', apiBaseUrl);
     const res = await fetch(url.toString(), {
@@ -29,10 +35,8 @@ export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
 
     const config = await res.json();
 
-    // Merge the remote config heavily into our local defaults
     imageConfigDefault = {
       ...imageConfigDefault,
-      path: apiBaseUrl.replace(/\/$/, ''),
       ...(config.deviceSizes && { deviceSizes: config.deviceSizes }),
       ...(config.imageSizes && { imageSizes: config.imageSizes }),
       ...(config.qualities && { qualities: config.qualities }),

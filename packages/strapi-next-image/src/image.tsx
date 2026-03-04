@@ -9,7 +9,6 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-  useMemo,
   useState,
   forwardRef,
 } from 'react';
@@ -319,13 +318,13 @@ function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
  */
 export const Image = forwardRef<HTMLImageElement | null, ImageProps>(
   (props, forwardedRef) => {
-    const config = useMemo(() => {
-      const c = imageConfigDefault;
-      const allSizes = [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b);
-      const deviceSizes = c.deviceSizes.sort((a, b) => a - b);
-      const qualities = c.qualities?.sort((a, b) => a - b);
-      return { ...c, allSizes, deviceSizes, qualities };
-    }, []);
+    const c = imageConfigDefault;
+    const config = {
+      ...c,
+      allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
+      deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
+      qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
+    };
 
     const { onLoad, onLoadingComplete } = props;
     const onLoadRef = useRef(onLoad);
