@@ -36,10 +36,22 @@ jobs:
         run: npm run test --workspaces
 
       - name: Publish strapi-plugin-next-image
-        run: npm publish --workspace=packages/strapi-plugin-next-image --access public --provenance
+        run: |
+          VERSION=$(node -p "require('./packages/strapi-plugin-next-image/package.json').version")
+          if npm view strapi-plugin-next-image@$VERSION version 2>/dev/null; then
+            echo "strapi-plugin-next-image@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/strapi-plugin-next-image --access public --provenance
+          fi
 
       - name: Publish strapi-next-image
-        run: npm publish --workspace=packages/strapi-next-image --access public --provenance
+        run: |
+          VERSION=$(node -p "require('./packages/strapi-next-image/package.json').version")
+          if npm view strapi-next-image@$VERSION version 2>/dev/null; then
+            echo "strapi-next-image@$VERSION already published, skipping"
+          else
+            npm publish --workspace=packages/strapi-next-image --access public --provenance
+          fi
 
       - name: Extract changelog for this version
         id: changelog
