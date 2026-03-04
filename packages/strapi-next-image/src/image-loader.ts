@@ -2,9 +2,21 @@ import type { ImageLoader, ImageLoaderProps, ImageLoaderWithConfig, ImageConfig 
 
 const DEFAULT_QUALITY = 75;
 
+function toRelativePath(src: string): string {
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    try {
+      const { pathname, search } = new URL(src);
+      return pathname + search;
+    } catch {
+      // fall through
+    }
+  }
+  return src;
+}
+
 function buildOptimizeUrl(base: string, src: string, width: number, quality?: number): string {
   const q = quality || DEFAULT_QUALITY;
-  return `${base}/api/next-image?url=${encodeURIComponent(src)}&w=${width}&q=${q}`;
+  return `${base}/api/next-image?url=${encodeURIComponent(toRelativePath(src))}&w=${width}&q=${q}`;
 }
 
 /**

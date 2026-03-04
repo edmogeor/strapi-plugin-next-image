@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-03-04
+
+### Fixed
+
+- **strapi-next-image** — Image loader now strips the host from absolute `src` URLs (e.g. from Strapi's media library) before passing them to the `/api/next-image` endpoint, preventing double-host URLs in optimized image requests
+
 ## [0.2.0] - 2026-03-04
 
 ### Fixed
