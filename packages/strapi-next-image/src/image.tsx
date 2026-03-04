@@ -10,6 +10,7 @@ import React, {
   useEffect,
   useCallback,
   useState,
+  useMemo,
   forwardRef,
 } from 'react';
 import ReactDOM from 'react-dom';
@@ -318,13 +319,19 @@ function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
  */
 export const Image = forwardRef<HTMLImageElement | null, ImageProps>(
   (props, forwardedRef) => {
-    const c = imageConfigDefault;
-    const config = {
-      ...c,
-      allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
-      deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
-      qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
-    };
+    // Memoised with [] so the config is captured once on first render.
+    // path is set synchronously by initializeStrapiImage before the first render,
+    // so this is safe — and prevents re-renders when the async config fetch completes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const config = useMemo(() => {
+      const c = imageConfigDefault;
+      return {
+        ...c,
+        allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
+        deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
+        qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
+      };
+    }, []);
 
     const { onLoad, onLoadingComplete } = props;
     const onLoadRef = useRef(onLoad);

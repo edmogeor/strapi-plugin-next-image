@@ -10,17 +10,7 @@ export let imageConfigDefault: ImageConfigComplete = {
   unoptimized: false,
 };
 
-/**
- * Fetch and apply image configuration from the Strapi backend.
- * Call this once at your application's entry point.
- */
-export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
-  // Set path immediately so images work even if the config fetch is not awaited
-  imageConfigDefault = {
-    ...imageConfigDefault,
-    path: apiBaseUrl.replace(/\/$/, ''),
-  };
-
+async function fetchAndApplyConfig(apiBaseUrl: string): Promise<void> {
   try {
     const url = new URL('/api/next-image/config', apiBaseUrl);
     const res = await fetch(url.toString(), {
@@ -45,6 +35,30 @@ export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
     };
   } catch (err) {
     console.error('[strapi-next-image] Error fetching config:', err);
+  }
+}
+
+/**
+ * Fetch and apply image configuration from the Strapi backend.
+ * Call this once at your application's entry point.
+ *
+ * On the server, the config fetch is awaited so SSR renders with the final config.
+ * On the client, the fetch is deferred until after React hydration to prevent
+ * hydration mismatches caused by changing deviceSizes mid-render.
+ */
+export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
+  // Set path immediately so images work even if the config fetch is not awaited
+  imageConfigDefault = {
+    ...imageConfigDefault,
+    path: apiBaseUrl.replace(/\/$/, ''),
+  };
+
+  if (typeof window !== 'undefined') {
+    // Client: defer config update until after React hydration completes
+    setTimeout(() => { fetchAndApplyConfig(apiBaseUrl); }, 0);
+  } else {
+    // Server: await so SSR renders with the final config
+    await fetchAndApplyConfig(apiBaseUrl);
   }
 }
 

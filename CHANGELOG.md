@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] - 2026-03-04
+
+### Fixed
+
+- **strapi-next-image** — `initializeStrapiImage` now defers the async config fetch on the client until after React hydration (`setTimeout(0)`), preventing hydration mismatches caused by `deviceSizes` changing mid-render
+- **strapi-next-image** — Config is memoised on first render in `Image` (with an empty deps array); this is safe because `path` is set synchronously before the first render, and avoids unnecessary re-renders when the async fetch completes
+
 ## [0.2.1] - 2026-03-04
 
 ### Fixed
