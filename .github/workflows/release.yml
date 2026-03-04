@@ -21,15 +21,7 @@ jobs:
         with:
           node-version: 20.x
           cache: 'npm'
-
-      - name: Authenticate with npm (OIDC trusted publishing)
-        run: |
-          OIDC_TOKEN=$(curl -sS \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://registry.npmjs.org" \
-            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
-            | jq -r '.value')
-          echo "::add-mask::${OIDC_TOKEN}"
-          npm config set "//registry.npmjs.org/:_authToken" "${OIDC_TOKEN}"
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
@@ -42,9 +34,13 @@ jobs:
 
       - name: Publish strapi-plugin-next-image
         run: npm publish --workspace=packages/strapi-plugin-next-image --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish strapi-next-image
         run: npm publish --workspace=packages/strapi-next-image --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Extract changelog for this version
         id: changelog
