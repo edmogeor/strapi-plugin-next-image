@@ -34,13 +34,9 @@ jobs:
 
       - name: Publish strapi-plugin-next-image
         run: npm publish --workspace=packages/strapi-plugin-next-image --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish strapi-next-image
         run: npm publish --workspace=packages/strapi-next-image --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Extract changelog for this version
         id: changelog
