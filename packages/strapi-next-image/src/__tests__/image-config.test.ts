@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { initializeStrapiImage, imageConfigDefault } from '../image-config';
 
 // Store original defaults to reset after each test
@@ -9,6 +9,12 @@ describe('initializeStrapiImage', () => {
         // Reset defaults before each test
         Object.assign(imageConfigDefault, originalDefaults);
         vi.restoreAllMocks();
+        // Use fake timers so we can flush the client-side setTimeout(0) deferral
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it('fetches config from the backend and updates defaults', async () => {
@@ -27,6 +33,7 @@ describe('initializeStrapiImage', () => {
         });
 
         await initializeStrapiImage('https://cms.example.com');
+        await vi.runAllTimersAsync(); // flush client-side setTimeout(0) deferral
 
         expect(global.fetch).toHaveBeenCalledWith('https://cms.example.com/api/next-image/config', expect.any(Object));
         expect(imageConfigDefault.deviceSizes).toEqual([320, 640]);
@@ -48,6 +55,7 @@ describe('initializeStrapiImage', () => {
         });
 
         await initializeStrapiImage('https://backend.test');
+        await vi.runAllTimersAsync();
 
         expect(imageConfigDefault.deviceSizes).toEqual([100, 200]);
         // Other values should remain at original Next.js defaults
@@ -64,6 +72,7 @@ describe('initializeStrapiImage', () => {
         const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         await initializeStrapiImage('https://backend.test');
+        await vi.runAllTimersAsync();
 
         expect(consoleSpy).toHaveBeenCalled();
         // path is set synchronously before the fetch, so images always point to Strapi
@@ -79,6 +88,7 @@ describe('initializeStrapiImage', () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         await initializeStrapiImage('https://backend.test');
+        await vi.runAllTimersAsync();
 
         expect(consoleSpy).toHaveBeenCalled();
         // path is set synchronously before the fetch, so images always point to Strapi
