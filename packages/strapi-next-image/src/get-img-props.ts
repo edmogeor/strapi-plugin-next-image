@@ -95,6 +95,8 @@ interface GenImgAttrsData {
   width?: number;
   quality?: number;
   sizes?: string;
+  /** When true, appends &blur=1 to URLs so the server generates a missing blur placeholder. */
+  needsBlurGeneration?: boolean;
 }
 
 interface GenImgAttrsResult {
@@ -111,6 +113,7 @@ function generateImgAttrs({
   quality,
   sizes,
   loader,
+  needsBlurGeneration,
 }: GenImgAttrsData): GenImgAttrsResult {
   if (unoptimized) {
     return { src, srcSet: undefined, sizes: undefined };
@@ -119,16 +122,17 @@ function generateImgAttrs({
   const { widths, kind } = getWidths(config, width, sizes);
   const last = widths.length - 1;
 
+  const makeUrl = (w: number) => {
+    const url = loader({ config, src, quality, width: w });
+    return needsBlurGeneration ? `${url}&blur=1` : url;
+  };
+
   return {
     sizes: !sizes && kind === 'w' ? '100vw' : sizes,
     srcSet: widths
-      .map(
-        (w, i) =>
-          `${loader({ config, src, quality, width: w })} ${kind === 'w' ? w : i + 1
-          }${kind}`
-      )
+      .map((w, i) => `${makeUrl(w)} ${kind === 'w' ? w : i + 1}${kind}`)
       .join(', '),
-    src: loader({ config, src, quality, width: widths[last] }),
+    src: makeUrl(widths[last]),
   };
 }
 
@@ -510,6 +514,11 @@ export function getImgProps(
     }
     : {};
 
+  // Request server-side blur generation when the component wants a blur
+  // placeholder but none exists yet (only via the default Strapi loader).
+  const needsBlurGeneration =
+    isDefaultLoader && !unoptimized && placeholder === 'blur' && !blurDataURL;
+
   const imgAttributes = generateImgAttrs({
     config,
     src,
@@ -518,6 +527,7 @@ export function getImgProps(
     quality: qualityInt,
     sizes,
     loader,
+    needsBlurGeneration,
   });
 
   const loadingFinal = isLazy ? 'lazy' : loading;

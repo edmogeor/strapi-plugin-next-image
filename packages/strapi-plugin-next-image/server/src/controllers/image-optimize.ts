@@ -21,6 +21,14 @@ function getSupportedMimeType(accept: string, configFormats: string[]): string |
   return null;
 }
 
+function buildCacheControl(isDev: boolean, ttl: number): string {
+  if (isDev) return 'public, max-age=0, must-revalidate';
+  return `public, max-age=${ttl}, stale-while-revalidate=${ttl}`;
+}
+
+// The response format depends on the Accept header, so caches must vary on it.
+const VARY = 'Accept';
+
 const controller: Core.Controller = {
   async optimize(ctx: Context) {
     const { url, w, q, f } = ctx.query as Record<string, string | undefined>;
@@ -87,6 +95,32 @@ const controller: Core.Controller = {
       );
     }
 
+    const isDev = process.env.NODE_ENV !== 'production';
+    const ttl = pluginConfig.minimumCacheTTL;
+
+    // When the component has placeholder="blur" but blurDataURL is missing it
+    // appends blur=1 to the image URL. We generate the blur as a side-effect
+    // here without affecting the image response or its cache key.
+    const needsBlurGeneration = ctx.query.blur === '1';
+
+    // --- Fast-path: 304 via ETag without reading the image buffer ---
+    const ifNoneMatch = ctx.get('if-none-match');
+    if (ifNoneMatch) {
+      const cacheService = getService(strapi, 'cache');
+      const formatKey = outputFormat || 'original';
+      const peek = await cacheService.peekEtag(url, width, quality, formatKey);
+      if (peek && peek.etag === ifNoneMatch) {
+        if (needsBlurGeneration) {
+          getService(strapi, 'blur-placeholder').generateIfMissing(url).catch(() => {});
+        }
+        ctx.set('ETag', peek.etag);
+        ctx.set('Cache-Control', buildCacheControl(isDev, ttl));
+        ctx.set('Vary', VARY);
+        ctx.status = 304;
+        return;
+      }
+    }
+
     // --- Call the optimization service ---
     try {
       const optimizeService = getService(strapi, 'next-image');
@@ -95,18 +129,18 @@ const controller: Core.Controller = {
         width,
         quality,
         outputFormat,
-        minimumCacheTTL: pluginConfig.minimumCacheTTL,
+        minimumCacheTTL: ttl,
         dangerouslyAllowSVG: pluginConfig.dangerouslyAllowSVG,
       });
 
+      if (needsBlurGeneration) {
+        getService(strapi, 'blur-placeholder').generateIfMissing(url).catch(() => {});
+      }
+
       // Set response headers
       ctx.set('Content-Type', result.contentType);
-
-      const isDev = process.env.NODE_ENV !== 'production';
-      ctx.set(
-        'Cache-Control',
-        `public, max-age=${isDev ? 0 : pluginConfig.minimumCacheTTL}, must-revalidate`
-      );
+      ctx.set('Cache-Control', buildCacheControl(isDev, ttl));
+      ctx.set('Vary', VARY);
 
       if (result.etag) {
         ctx.set('ETag', result.etag);
@@ -116,13 +150,14 @@ const controller: Core.Controller = {
         `inline; filename="${result.filename}"`
       );
 
-      // Check ETag for 304
-      const ifNoneMatch = ctx.get('if-none-match');
+      // Final ETag check (handles the case where optimize() produced the same
+      // content as what the client already has, e.g. after a stale revalidation)
       if (ifNoneMatch && result.etag && ifNoneMatch === result.etag) {
         ctx.status = 304;
         return;
       }
 
+      ctx.set('Content-Length', String(result.buffer.length));
       ctx.body = result.buffer;
     } catch (err: any) {
       if (err.status) {

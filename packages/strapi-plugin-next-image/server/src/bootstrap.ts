@@ -10,6 +10,10 @@ function invalidateCacheForUrl(strapi: Core.Strapi, url: string) {
     const config = strapi.config.get('plugin::next-image') as InvalidateConfig;
     const cacheService = getService(strapi, 'cache');
     cacheService.invalidateUrl(url, config);
+    // Also clear the blur service's in-memory confirmation so the next
+    // request re-checks the DB after the file has been replaced/deleted.
+    const blurService = getService(strapi, 'blur-placeholder');
+    blurService.invalidateUrl(url);
   } catch (err) {
     strapi.log.error(`Failed to invalidate cache for ${url}:`, err);
   }

@@ -14,8 +14,9 @@ async function fetchAndApplyConfig(apiBaseUrl: string): Promise<void> {
   try {
     const url = new URL('/api/next-image/config', apiBaseUrl);
     const res = await fetch(url.toString(), {
-      // Configuration shouldn't change often, but we want it to be fresh on reload
-      cache: 'no-cache',
+      // Respect Cache-Control from the server (max-age=300, stale-while-revalidate=86400).
+      // Avoids unnecessary round-trips — the browser cache handles freshness.
+      cache: 'default',
     });
 
     if (!res.ok) {
