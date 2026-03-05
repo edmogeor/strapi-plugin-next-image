@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.3] - 2026-03-05
+
+### Fixed
+
+- **strapi-plugin-next-image** — All file I/O in the cache and optimization services is now fully async (`fs/promises`), freeing the event loop during disk reads and writes
+- **strapi-plugin-next-image** — Concurrent cold-cache requests for the same image variant are now de-duplicated: only one Sharp pipeline runs and all waiting requests share the result
+
 ## [0.2.2] - 2026-03-04
 
 ### Fixed

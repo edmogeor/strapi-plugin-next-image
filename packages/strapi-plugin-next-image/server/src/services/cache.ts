@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
@@ -81,26 +82,21 @@ export default () => ({
     const key = getCacheKey(url, width, quality, format);
     const entryDir = path.join(getCacheDir(), key);
 
-    if (!fs.existsSync(entryDir)) {
+    try {
+      await fsp.access(entryDir);
+    } catch {
       return null;
     }
 
-    const files = fs.readdirSync(entryDir);
-    if (files.length === 0) {
-      return null;
-    }
+    const files = await fsp.readdir(entryDir);
+    if (files.length === 0) return null;
 
     const filename = files[0];
     const meta = parseCacheFilename(filename);
-    if (!meta) {
-      return null;
-    }
+    if (!meta) return null;
 
-    const now = Date.now();
-    const isStale = now > meta.expireAt;
-
-    const filePath = path.join(entryDir, filename);
-    const buffer = fs.readFileSync(filePath);
+    const isStale = Date.now() > meta.expireAt;
+    const buffer = await fsp.readFile(path.join(entryDir, filename));
 
     const extToContentType: Record<string, string> = {
       webp: 'image/webp',
@@ -133,15 +129,14 @@ export default () => ({
     const key = getCacheKey(url, width, quality, format);
     const entryDir = path.join(getCacheDir(), key);
 
-    // Ensure the directory exists (clean any old entry)
-    fs.rmSync(entryDir, { recursive: true, force: true });
-    fs.mkdirSync(entryDir, { recursive: true });
+    await fsp.rm(entryDir, { recursive: true, force: true });
+    await fsp.mkdir(entryDir, { recursive: true });
 
     const etag = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 16);
     const expireAt = Date.now() + maxAge * 1000;
     const filename = `${maxAge}.${expireAt}.${etag}.${extension}`;
 
-    fs.writeFileSync(path.join(entryDir, filename), buffer);
+    await fsp.writeFile(path.join(entryDir, filename), buffer);
 
     return { etag };
   },
@@ -149,7 +144,7 @@ export default () => ({
   async clear(): Promise<void> {
     const cacheDir = getCacheDir();
     if (fs.existsSync(cacheDir)) {
-      fs.rmSync(cacheDir, { recursive: true, force: true });
+      await fsp.rm(cacheDir, { recursive: true, force: true });
     }
   },
 });

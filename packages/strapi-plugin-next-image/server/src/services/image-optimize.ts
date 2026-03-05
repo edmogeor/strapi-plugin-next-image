@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Core } from '@strapi/types';
 
@@ -108,8 +109,11 @@ function getExtFromMime(mime: string): string {
   return map[mime] || 'bin';
 }
 
-// Track in-flight revalidations to avoid duplicate work
+// Track in-flight revalidations to avoid duplicate background work
 const revalidating = new Set<string>();
+
+// De-duplicate concurrent cold-cache requests for the same image variant
+const inFlight = new Map<string, Promise<OptimizeResult>>();
 
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
   /**
@@ -147,8 +151,14 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       };
     }
 
-    // --- No cache entry — optimize synchronously ---
-    return this._optimizeAndCache(params);
+    // --- No cache entry — de-duplicate concurrent requests for the same variant ---
+    const inflightKey = `${url}|${width}|${quality}|${formatKey}`;
+    let promise = inFlight.get(inflightKey);
+    if (!promise) {
+      promise = this._optimizeAndCache(params).finally(() => inFlight.delete(inflightKey));
+      inFlight.set(inflightKey, promise);
+    }
+    return promise;
   },
 
   /**
@@ -176,13 +186,15 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     const uploadsDir = path.join(process.cwd(), 'public');
     const filePath = path.join(uploadsDir, url);
 
-    if (!fs.existsSync(filePath)) {
+    try {
+      await fsp.access(filePath);
+    } catch {
       const err = new Error(`Image not found: ${url}`) as Error & { status: number };
       err.status = 404;
       throw err;
     }
 
-    const originalBuffer = fs.readFileSync(filePath);
+    const originalBuffer = await fsp.readFile(filePath);
     const ext = path.extname(url);
     const basename = path.basename(url, ext);
     const originalContentType = getContentTypeFromExt(ext);
