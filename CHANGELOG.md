@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-03-05
+
+### Added
+
+- **strapi-next-image** — The component now automatically requests server-side blur generation (`?blur=1`) if a blur placeholder is missing from the Strapi media library
+- **strapi-plugin-next-image** — `GET /api/next-image` now supports an optional `blur=1` query parameter to trigger on-demand generation and persistence of missing blur placeholders
+- **strapi-plugin-next-image** — The optimization controller now performs a fast ETag check (`peekEtag`) to return `304 Not Modified` without reading the image buffer from disk if the client already has the current version
+
+### Fixed
+
+- **strapi-plugin-next-image** — Added an in-memory LRU cache (200 entries) for the optimization service, significantly reducing disk I/O for frequently requested image variants
+- **strapi-plugin-next-image** — The config endpoint (`/api/next-image/config`) now includes an ETag and `Cache-Control` headers (5 min max-age, 24h stale-while-revalidate), and the frontend component now respects these headers
+- **strapi-plugin-next-image** — Cache invalidation now also clears the blur placeholder confirmation state, ensuring placeholders are re-checked if an image is replaced
+- **strapi-plugin-next-image** — Fixed missing `Content-Length` header in optimized image responses
+
 ## [0.2.3] - 2026-03-05
 
 ### Fixed
