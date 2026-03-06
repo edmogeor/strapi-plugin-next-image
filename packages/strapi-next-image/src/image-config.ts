@@ -44,8 +44,10 @@ async function fetchAndApplyConfig(apiBaseUrl: string): Promise<void> {
  * Call this once at your application's entry point.
  *
  * On the server, the config fetch is awaited so SSR renders with the final config.
- * On the client, the fetch is deferred until after React hydration to prevent
- * hydration mismatches caused by changing deviceSizes mid-render.
+ * On the client, the server-fetched config is read synchronously from a global that the
+ * Image component embeds in the SSR HTML, ensuring hydration uses the same sizes as the
+ * server without a CORS round-trip. A deferred fetch is still scheduled to pick up any
+ * changes since the last SSR.
  */
 export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
   // Set path immediately so images work even if the config fetch is not awaited
@@ -55,7 +57,20 @@ export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
   };
 
   if (typeof window !== 'undefined') {
-    // Client: defer config update until after React hydration completes
+    // Client: apply config embedded by the server in the SSR HTML (avoids CORS).
+    // The Image component renders an inline <script> that sets this global during SSR.
+    const embedded = (window as any).__STRAPI_IMAGE_CONFIG__;
+    if (embedded) {
+      imageConfigDefault = {
+        ...imageConfigDefault,
+        ...(Array.isArray(embedded.deviceSizes) && { deviceSizes: embedded.deviceSizes }),
+        ...(Array.isArray(embedded.imageSizes) && { imageSizes: embedded.imageSizes }),
+        ...(Array.isArray(embedded.qualities) && { qualities: embedded.qualities }),
+        ...(Array.isArray(embedded.formats) && { formats: embedded.formats }),
+        ...(typeof embedded.dangerouslyAllowSVG === 'boolean' && { dangerouslyAllowSVG: embedded.dangerouslyAllowSVG }),
+      };
+    }
+    // Still defer a fresh fetch in case the server config has changed since the last SSR.
     setTimeout(() => { fetchAndApplyConfig(apiBaseUrl); }, 0);
   } else {
     // Server: await so SSR renders with the final config

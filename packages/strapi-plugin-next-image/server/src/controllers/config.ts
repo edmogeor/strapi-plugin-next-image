@@ -27,6 +27,7 @@ export default {
       .digest('hex')
       .slice(0, 16);
 
+    ctx.set('Access-Control-Allow-Origin', '*');
     ctx.set('ETag', etag);
     ctx.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400');
 

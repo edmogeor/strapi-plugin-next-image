@@ -12,6 +12,7 @@ import React, {
   useState,
   useMemo,
   forwardRef,
+  cache,
 } from 'react';
 import ReactDOM from 'react-dom';
 import { getImgProps } from './get-img-props';
@@ -24,6 +25,15 @@ import type {
 } from './types';
 import { imageConfigDefault } from './image-config';
 import defaultLoader from './image-loader';
+
+// Escapes </script> sequences so the JSON is safe to embed inside a <script> tag.
+function safeJsonForScript(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+// Per-request on the server (React's async context), module-singleton on the client.
+// Ensures only the first <Image> in each render tree injects the config script.
+const getConfigScriptState = cache(() => ({ injected: false }));
 
 type ImgElementWithDataProp = HTMLImageElement & {
   'data-loaded-src': string | undefined;
@@ -323,13 +333,19 @@ export const Image = forwardRef<HTMLImageElement | null, ImageProps>(
     // path is set synchronously by initializeStrapiImage before the first render,
     // so this is safe — and prevents re-renders when the async config fetch completes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const config = useMemo(() => {
+    const { config, injectConfigScript } = useMemo(() => {
       const c = imageConfigDefault;
+      const scriptState = getConfigScriptState();
+      const injectConfigScript = !scriptState.injected;
+      scriptState.injected = true;
       return {
-        ...c,
-        allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
-        deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
-        qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
+        config: {
+          ...c,
+          allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
+          deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
+          qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
+        },
+        injectConfigScript,
       };
     }, []);
 
@@ -369,6 +385,24 @@ export const Image = forwardRef<HTMLImageElement | null, ImageProps>(
           ref={forwardedRef}
         />
         {imgMeta.priority ? <ImagePreload imgAttributes={imgAttributes} /> : null}
+        {/* Injected once per render tree (first <Image> only) via React.cache().
+            Embeds the server-fetched config so the client can apply it synchronously,
+            avoiding a CORS round-trip. suppressHydrationWarning covers the edge case
+            where initializeStrapiImage is called after hydration. */}
+        {injectConfigScript && (
+          <script
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{
+              __html: `window.__STRAPI_IMAGE_CONFIG__=${safeJsonForScript({
+                deviceSizes: imageConfigDefault.deviceSizes,
+                imageSizes: imageConfigDefault.imageSizes,
+                qualities: imageConfigDefault.qualities,
+                formats: imageConfigDefault.formats,
+                dangerouslyAllowSVG: imageConfigDefault.dangerouslyAllowSVG,
+              })}`,
+            }}
+          />
+        )}
       </>
     );
   }
