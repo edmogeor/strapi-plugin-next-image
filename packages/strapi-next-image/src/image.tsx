@@ -60,11 +60,7 @@ function warnOnce(msg: string): void {
   }
 }
 
-function getDynamicProps(
-  fetchPriority?: string
-): Record<string, string | undefined> {
-  return { fetchPriority };
-}
+
 
 // See https://stackoverflow.com/q/39777833/266535 for why we use this ref
 // handler instead of the img's onLoad attribute.
@@ -260,7 +256,12 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
     return (
       <img
         {...rest}
-        {...getDynamicProps(fetchPriority)}
+        fetchPriority={fetchPriority}
+        // suppressHydrationWarning is needed because `fetchpriority` may differ
+        // between SSR and client hydration (e.g. "auto" vs absent). This is the
+        // same approach used by Next.js's own Image component.
+        // See: https://react.dev/link/hydration-mismatch
+        suppressHydrationWarning
         // It's intended to keep `loading` before `src` because React updates
         // props in order which causes Safari/Firefox to not lazy load properly.
         // See https://github.com/facebook/react/issues/25883

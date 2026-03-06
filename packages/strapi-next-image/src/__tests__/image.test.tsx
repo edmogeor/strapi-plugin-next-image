@@ -78,6 +78,29 @@ describe('<Image /> component', () => {
     expect(ref.current).toBeInstanceOf(HTMLImageElement);
   });
 
+  it('renders fetchpriority="high" when fetchPriority="high" is passed', () => {
+    render(
+      <Image
+        alt="test"
+        src="/photo.jpg"
+        width={100}
+        height={100}
+        fetchPriority="high"
+      />
+    );
+    const img = screen.getByRole('img');
+    expect(img.getAttribute('fetchpriority')).toBe('high');
+  });
+
+  it('does not render fetchpriority attribute when fetchPriority is not passed', () => {
+    render(
+      <Image alt="test" src="/photo.jpg" width={100} height={100} />
+    );
+    const img = screen.getByRole('img');
+    // fetchpriority should be absent (not "auto") to avoid SSR/client mismatch
+    expect(img.getAttribute('fetchpriority')).toBeNull();
+  });
+
   it('renders StrapiMedia as src', () => {
     const media = {
       id: 1,

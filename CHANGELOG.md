@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.3.1] - 2026-03-06
+## [0.3.2] - 2026-03-06
 
 ### Fixed
+
+- **strapi-next-image** — Fixed hydration mismatch caused by explicit `fetchpriority="auto"` attribute. `getDynamicProps` was removed and `suppressHydrationWarning` was added to the `<img>` element instead, matching Next.js's implementation.
+
+## [0.3.1] - 2026-03-06
 
 - **strapi-next-image** — Eliminated hydration mismatch caused by CORS blocking the client-side config fetch: the `Image` component now embeds the server-fetched config as a single inline `<script>` per page (deduplicated via `React.cache()`), and `initializeStrapiImage` reads it synchronously on the client before React hydration begins
 - **strapi-plugin-next-image** — Config endpoint (`GET /api/next-image/config`) now returns `Access-Control-Allow-Origin: *`, allowing the client's deferred refresh fetch to succeed
