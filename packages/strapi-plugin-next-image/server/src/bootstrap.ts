@@ -51,6 +51,24 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
     });
   }
 
+  // If blurSize changed, clear all stored blur placeholders so they get
+  // regenerated on demand with the new size.
+  const pluginConfig = strapi.config.get('plugin::next-image') as { blurSize?: number };
+  const currentBlurSize = pluginConfig.blurSize ?? 8;
+  const storedBlurSize = (await pluginStore.get({ key: 'blurSize' })) as number | null;
+
+  if (storedBlurSize !== null && storedBlurSize !== currentBlurSize) {
+    strapi.log.info(
+      `[next-image] blurSize changed (${storedBlurSize} → ${currentBlurSize}), clearing all blur placeholders for regeneration`
+    );
+    await (strapi.db.query('plugin::upload.file') as any).updateMany({
+      where: { blurDataURL: { $null: false } },
+      data: { blurDataURL: null },
+    });
+  }
+
+  await pluginStore.set({ key: 'blurSize', value: currentBlurSize });
+
   // Auto-generate blur placeholders when images are uploaded or replaced
   strapi.db.lifecycles.subscribe({
     models: ['plugin::upload.file'],
