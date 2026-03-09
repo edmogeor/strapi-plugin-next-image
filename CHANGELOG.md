@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.3] - 2026-03-09
+
+### Fixed
+
+- **strapi-plugin-next-image** — Blur placeholders are now invalidated and regenerated on demand when the `blurSize` config value changes. On startup, the plugin compares the current `blurSize` to the previously persisted value; if they differ, all stored `blurDataURL` fields are cleared so they are regenerated with the new size.
+
 ## [0.3.2] - 2026-03-06
 
 ### Fixed
