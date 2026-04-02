@@ -199,18 +199,6 @@ describe('getImgProps() — dev-mode errors', () => {
     ).toThrow('invalid "placeholder"');
   });
 
-  it('throws for blur without blurDataURL', () => {
-    expect(() =>
-      call({
-        src: '/test.png',
-        alt: '',
-        width: 100,
-        height: 100,
-        placeholder: 'blur',
-      })
-    ).toThrow('missing the "blurDataURL"');
-  });
-
   it('throws for src with leading whitespace', () => {
     expect(() =>
       call({ src: ' /test.png', alt: '', width: 100, height: 100 })
@@ -288,6 +276,19 @@ describe('getImgProps() — dev-mode warnings', () => {
     });
     expect(
       warningMessages.some((m) => m.includes('unsupported "ref"'))
+    ).toBe(true);
+  });
+
+  it('warns for blur without blurDataURL', () => {
+    call({
+      src: '/warn-blur.png',
+      alt: '',
+      width: 100,
+      height: 100,
+      placeholder: 'blur',
+    });
+    expect(
+      warningMessages.some((m) => m.includes('placeholder will be generated server-side'))
     ).toBe(true);
   });
 
