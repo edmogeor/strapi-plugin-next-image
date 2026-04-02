@@ -34,6 +34,7 @@ async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl:
   }
 }
 
+
 export default async ({ strapi }: { strapi: Core.Strapi }) => {
   // Initialize default plugin settings in the store if not already set
   const pluginStore = strapi.store({
@@ -73,9 +74,17 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
   strapi.db.lifecycles.subscribe({
     models: ['plugin::upload.file'],
 
-    beforeUpdate(event) {
-      // Stash the current URL so afterUpdate can detect file replacement
-      (event.state as Record<string, unknown>).oldUrl = event.params?.data?.url;
+    async beforeUpdate(event) {
+      // Fetch the current URL from DB so afterUpdate can detect file replacement.
+      // (event.params.data.url is the *new* value being written, not the old one.)
+      const where = event.params?.where;
+      if (where) {
+        const current = await (strapi.db.query('plugin::upload.file') as any).findOne({
+          where,
+          select: ['url'],
+        });
+        (event.state as Record<string, unknown>).oldUrl = current?.url;
+      }
     },
 
     afterCreate(event) {
@@ -96,7 +105,8 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
       // (e.g. Strapi's "replace file" feature keeps the same URL)
       invalidateCacheForUrl(strapi, result.url);
 
-      // If URL changed, also purge old URL's variants and regenerate blur
+      // If URL changed (file replaced with a new upload), also purge old URL's
+      // cache variants and regenerate the blur for the new file.
       const oldUrl = (event.state as Record<string, unknown>).oldUrl as string | undefined;
       if (oldUrl && oldUrl !== result.url) {
         invalidateCacheForUrl(strapi, oldUrl);
@@ -111,4 +121,5 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
       }
     },
   });
+
 };

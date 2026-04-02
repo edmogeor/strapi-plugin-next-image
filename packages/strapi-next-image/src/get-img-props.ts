@@ -380,8 +380,9 @@ export function getImgProps(
       );
     }
     if (placeholder === 'blur' && !blurDataURL) {
-      throw new Error(
-        `Image with src "${src}" has "placeholder='blur'" property but is missing the "blurDataURL" property.\nPossible solutions:\n  - Add a "blurDataURL" property\n  - Remove the "placeholder" property`
+      warnOnce(
+        `Image with src "${src}" has "placeholder='blur'" but no "blurDataURL" yet. ` +
+        `A blur placeholder will be generated server-side on first load.`
       );
     }
     if (!unoptimized && !isDefaultLoader) {
