@@ -47,6 +47,18 @@ async function backfillMissingBlurs(strapi: Core.Strapi): Promise<void> {
     await generateAndSaveBlur(strapi, file.id, file.url, file.mime);
   }
   strapi.log.info('[next-image] Blur placeholder backfill complete.');
+  notifyFrontend();
+}
+
+function notifyFrontend() {
+  const siteUrl = process.env.SITE_URL;
+  const secret = process.env.STRAPI_WEBHOOK_SECRET;
+  if (!siteUrl || !secret) return;
+  fetch(`${siteUrl}/api/revalidate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-strapi-signature': secret },
+    body: JSON.stringify({ model: 'plugin::upload.file', event: 'entry.update' }),
+  }).catch(() => {});
 }
 
 export default async ({ strapi }: { strapi: Core.Strapi }) => {
