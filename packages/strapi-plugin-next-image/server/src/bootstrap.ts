@@ -28,10 +28,22 @@ async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl:
         where: { id: fileId },
         data: { blurDataURL },
       });
+      notifyFrontend();
     }
   } catch (err) {
     strapi.log.error(`Failed to generate blur placeholder for file ${fileId}:`, err);
   }
+}
+
+function notifyFrontend() {
+  const siteUrl = process.env.SITE_URL;
+  const secret = process.env.STRAPI_WEBHOOK_SECRET;
+  if (!siteUrl || !secret) return;
+  fetch(`${siteUrl}/api/revalidate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-strapi-signature': secret },
+    body: JSON.stringify({ model: 'plugin::upload.file', event: 'entry.update' }),
+  }).catch(() => {});
 }
 
 
