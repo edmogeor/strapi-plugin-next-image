@@ -28,24 +28,26 @@ async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl:
         where: { id: fileId },
         data: { blurDataURL },
       });
-      notifyFrontend();
     }
   } catch (err) {
     strapi.log.error(`Failed to generate blur placeholder for file ${fileId}:`, err);
   }
 }
 
-function notifyFrontend() {
-  const siteUrl = process.env.SITE_URL;
-  const secret = process.env.STRAPI_WEBHOOK_SECRET;
-  if (!siteUrl || !secret) return;
-  fetch(`${siteUrl}/api/revalidate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-strapi-signature': secret },
-    body: JSON.stringify({ model: 'plugin::upload.file', event: 'entry.update' }),
-  }).catch(() => {});
-}
+async function backfillMissingBlurs(strapi: Core.Strapi): Promise<void> {
+  const files = await (strapi.db.query('plugin::upload.file') as any).findMany({
+    where: { blurDataURL: { $null: true }, mime: { $startsWith: 'image/' } },
+    select: ['id', 'url', 'mime'],
+  });
 
+  if (files.length === 0) return;
+
+  strapi.log.info(`[next-image] Generating blur placeholders for ${files.length} image(s)...`);
+  for (const file of files) {
+    await generateAndSaveBlur(strapi, file.id, file.url, file.mime);
+  }
+  strapi.log.info('[next-image] Blur placeholder backfill complete.');
+}
 
 export default async ({ strapi }: { strapi: Core.Strapi }) => {
   // Initialize default plugin settings in the store if not already set
@@ -64,8 +66,7 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
     });
   }
 
-  // If blurSize changed, clear all stored blur placeholders so they get
-  // regenerated on demand with the new size.
+  // If blurSize changed, clear all stored blur placeholders so they get regenerated.
   const pluginConfig = strapi.config.get('plugin::next-image') as { blurSize?: number };
   const currentBlurSize = pluginConfig.blurSize ?? 8;
   const storedBlurSize = (await pluginStore.get({ key: 'blurSize' })) as number | null;
@@ -81,6 +82,10 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
   }
 
   await pluginStore.set({ key: 'blurSize', value: currentBlurSize });
+
+  // Generate blur placeholders for any images that don't have one yet.
+  // Runs synchronously so all blurs are ready before Strapi starts serving.
+  await backfillMissingBlurs(strapi);
 
   // Auto-generate blur placeholders when images are uploaded or replaced
   strapi.db.lifecycles.subscribe({
@@ -133,5 +138,4 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
       }
     },
   });
-
 };

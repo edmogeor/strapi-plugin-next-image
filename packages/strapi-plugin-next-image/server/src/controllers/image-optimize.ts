@@ -98,11 +98,6 @@ const controller: Core.Controller = {
     const isDev = process.env.NODE_ENV !== 'production';
     const ttl = pluginConfig.minimumCacheTTL;
 
-    // When the component has placeholder="blur" but blurDataURL is missing it
-    // appends blur=1 to the image URL. We generate the blur as a side-effect
-    // here without affecting the image response or its cache key.
-    const needsBlurGeneration = ctx.query.blur === '1';
-
     // --- Fast-path: 304 via ETag without reading the image buffer ---
     const ifNoneMatch = ctx.get('if-none-match');
     if (ifNoneMatch) {
@@ -110,9 +105,6 @@ const controller: Core.Controller = {
       const formatKey = outputFormat || 'original';
       const peek = await cacheService.peekEtag(url, width, quality, formatKey);
       if (peek && peek.etag === ifNoneMatch) {
-        if (needsBlurGeneration) {
-          getService(strapi, 'blur-placeholder').generateIfMissing(url).catch(() => {});
-        }
         ctx.set('ETag', peek.etag);
         ctx.set('Cache-Control', buildCacheControl(isDev, ttl));
         ctx.set('Vary', VARY);
@@ -132,10 +124,6 @@ const controller: Core.Controller = {
         minimumCacheTTL: ttl,
         dangerouslyAllowSVG: pluginConfig.dangerouslyAllowSVG,
       });
-
-      if (needsBlurGeneration) {
-        getService(strapi, 'blur-placeholder').generateIfMissing(url).catch(() => {});
-      }
 
       // Set response headers
       ctx.set('Content-Type', result.contentType);
