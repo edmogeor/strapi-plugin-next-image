@@ -279,17 +279,16 @@ describe('getImgProps() — dev-mode warnings', () => {
     ).toBe(true);
   });
 
-  it('warns for blur without blurDataURL', () => {
-    call({
-      src: '/warn-blur.png',
-      alt: '',
-      width: 100,
-      height: 100,
-      placeholder: 'blur',
-    });
-    expect(
-      warningMessages.some((m) => m.includes('placeholder will be generated server-side'))
-    ).toBe(true);
+  it('throws for blur without blurDataURL', () => {
+    expect(() =>
+      call({
+        src: '/warn-blur.png',
+        alt: '',
+        width: 100,
+        height: 100,
+        placeholder: 'blur',
+      })
+    ).toThrow('missing the "blurDataURL" property');
   });
 
   it('warns about legacy layout prop', () => {
