@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.11] - 2026-04-08
+
+### Changed
+
+- **strapi-plugin-next-image** — Service accessors (`getCacheService`, `getBlurService`) are now fully typed, replacing the previous untyped `getService(strapi, name)` helper. All `strapi.db.query('plugin::upload.file') as any` calls have been replaced with the typed `getUploadFileRepository()` utility, improving type safety throughout the plugin.
+- **strapi-plugin-next-image** — `isAnimated` image detection extracted to a dedicated `image-utils` module for better separation of concerns.
+- **strapi-next-image** — `warnOnce` extracted to a dedicated module.
+- **strapi-plugin-next-image** — `InvalidateConfig` is now derived from `PluginConfig` via `Pick<>`, eliminating the duplicate type definition.
+
+### Added
+
+- **strapi-plugin-next-image** — Test suites for cache service, blur-placeholder service, image-optimize service, and controllers.
+- Prettier formatting, husky pre-commit hook, and fallow dead-code analysis configured for the monorepo.
+
 ## [0.3.3] - 2026-03-09
 
 ### Fixed

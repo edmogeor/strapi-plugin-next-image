@@ -1,6 +1,6 @@
 {
   "name": "strapi-plugin-next-image",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "A Strapi v5 plugin that serves optimized images via Sharp for the strapi-next-image React component.",
   "author": "edmogeor",
   "repository": {
