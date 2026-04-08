@@ -1,11 +1,22 @@
-# strapi-plugin-next-image
+<div align="center">
+  <img src="https://raw.githubusercontent.com/edmogeor/strapi-plugin-next-image/main/assets/logo.png" width="140" alt="strapi-plugin-next-image logo"/>
+  <h1>strapi-plugin-next-image</h1>
+  <p>
+    <a href="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml">
+      <img src="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+    </a>
+    <a href="https://www.npmjs.com/package/strapi-plugin-next-image">
+      <img src="https://img.shields.io/npm/v/strapi-plugin-next-image.svg" alt="npm version"/>
+    </a>
+    <a href="./LICENSE">
+      <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"/>
+    </a>
+  </p>
+</div>
 
 Next.js-style `<Image />` optimization for **any** React app powered by Strapi v5.
 
 Drop in two packages — a Strapi plugin that serves optimized images via Sharp, and a React component that's API-compatible with `next/image` — and get responsive `srcSet` generation, automatic WebP/AVIF conversion, blur placeholders, and aggressive caching out of the box.
-
-[![CI](https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml/badge.svg)](https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 ---
 
@@ -25,10 +36,10 @@ Drop in two packages — a Strapi plugin that serves optimized images via Sharp,
 
 ## Packages
 
-| Package | Description |
-|---|---|
+| Package                                                           | Description                                                       |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
 | [`strapi-plugin-next-image`](./packages/strapi-plugin-next-image) | Strapi v5 plugin — exposes `GET /api/next-image` powered by Sharp |
-| [`strapi-next-image`](./packages/strapi-next-image) | React `<Image />` component — drop-in `next/image` replacement |
+| [`strapi-next-image`](./packages/strapi-next-image)               | React `<Image />` component — drop-in `next/image` replacement    |
 
 ---
 
@@ -60,10 +71,10 @@ await initializeStrapiImage('https://cms.example.com');
 function Hero({ cover }) {
   return (
     <Image
-      src={cover}           // StrapiMedia object — width, height, alt auto-populated
+      src={cover} // StrapiMedia object — width, height, alt auto-populated
       sizes="(max-width: 768px) 100vw, 800px"
       fill
-      priority              // preload for LCP
+      priority // preload for LCP
       style={{ objectFit: 'cover' }}
     />
   );
@@ -104,7 +115,7 @@ Override the default quality (75) and mark above-the-fold images for preloading:
 <Image
   src={cover}
   quality={90}
-  priority   // injects <link rel="preload"> into <head>
+  priority // injects <link rel="preload"> into <head>
 />
 ```
 
@@ -135,21 +146,19 @@ const { props } = getImageProps({
 
 ### Custom Strapi URL
 
-If your Strapi server runs on a different origin (e.g., your frontend is on Vercel but Strapi is on AWS), you do **not** need to manually define a custom loader for every image. 
+If your Strapi server runs on a different origin (e.g., your frontend is on Vercel but Strapi is on AWS), you do **not** need to manually define a custom loader for every image.
 
 Simply calling `initializeStrapiImage('https://cms.mywebsite.com')` (as shown in the Configuration section below) automatically configures the default global image loader to point at your Strapi backend securely!
 
-*(If you still need to manually create one for a one-off image, you can import and pass `loader={createStrapiLoader('https://cms.example.com')}` into the component).*
+_(If you still need to manually create one for a one-off image, you can import and pass `loader={createStrapiLoader('https://cms.example.com')}` into the component)._
 
 ---
 
 ## Configuration
 
-
-
 ### Frontend (React)
 
-To keep your frontend breakpoints perfectly synchronized with your backend configuration without manual copying, call `initializeStrapiImage()` once at your app's entry point (e.g., `main.tsx` or `_app.tsx`). 
+To keep your frontend breakpoints perfectly synchronized with your backend configuration without manual copying, call `initializeStrapiImage()` once at your app's entry point (e.g., `main.tsx` or `_app.tsx`).
 
 This fetches the allowed `deviceSizes`, `imageSizes`, and `formats` directly from the Strapi API and applies them globally:
 
@@ -172,23 +181,23 @@ export default {
       imageSizes: [32, 48, 64, 96, 128, 256, 384],
       qualities: [75],
       formats: ['image/webp'],
-      minimumCacheTTL: 14400,       // seconds (default: 4 hours)
+      minimumCacheTTL: 14400, // seconds (default: 4 hours)
       dangerouslyAllowSVG: false,
-      blurSize: 8,                  // blur thumbnail width in px
+      blurSize: 8, // blur thumbnail width in px
     },
   },
 };
 ```
 
-| Option | Default | Description |
-|---|---|---|
-| `deviceSizes` | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints for responsive images |
-| `imageSizes` | `[32, 48, 64, 96, 128, 256, 384]` | Fixed-width image sizes |
-| `qualities` | `[75]` | Allowed quality values |
-| `formats` | `['image/webp']` | Output formats the endpoint will serve |
-| `minimumCacheTTL` | `14400` | Cache lifetime in seconds |
-| `dangerouslyAllowSVG` | `false` | Allow SVG passthrough |
-| `blurSize` | `8` | Width of blur placeholder thumbnails |
+| Option                | Default                                         | Description                                |
+| --------------------- | ----------------------------------------------- | ------------------------------------------ |
+| `deviceSizes`         | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints for responsive images |
+| `imageSizes`          | `[32, 48, 64, 96, 128, 256, 384]`               | Fixed-width image sizes                    |
+| `qualities`           | `[75]`                                          | Allowed quality values                     |
+| `formats`             | `['image/webp']`                                | Output formats the endpoint will serve     |
+| `minimumCacheTTL`     | `14400`                                         | Cache lifetime in seconds                  |
+| `dangerouslyAllowSVG` | `false`                                         | Allow SVG passthrough                      |
+| `blurSize`            | `8`                                             | Width of blur placeholder thumbnails       |
 
 ### API Endpoint
 
@@ -196,12 +205,12 @@ export default {
 GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 ```
 
-| Param | Required | Description |
-|---|---|---|
-| `url` | Yes | Path starting with `/uploads/` |
-| `w` | Yes | Width — must be in `deviceSizes` or `imageSizes` |
-| `q` | No | Quality 1–100 (default 75) |
-| `f` | No | Format override (`webp`, `avif`) |
+| Param | Required | Description                                      |
+| ----- | -------- | ------------------------------------------------ |
+| `url` | Yes      | Path starting with `/uploads/`                   |
+| `w`   | Yes      | Width — must be in `deviceSizes` or `imageSizes` |
+| `q`   | No       | Quality 1–100 (default 75)                       |
+| `f`   | No       | Format override (`webp`, `avif`)                 |
 
 Responds with optimized binary image data, `Cache-Control: public, max-age={isDev ? 0 : TTL}, must-revalidate`, and an `ETag` for conditional requests.
 
