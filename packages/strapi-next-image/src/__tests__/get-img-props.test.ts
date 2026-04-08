@@ -368,6 +368,138 @@ describe('getImgProps() — legacy layout prop', () => {
   });
 });
 
+describe('getImgProps() — priority and loading', () => {
+  it('priority leaves loading undefined (no lazy loading attribute)', () => {
+    const { props } = call({ src: '/photo.jpg', alt: '', width: 100, height: 100, priority: true });
+    expect(props.loading).toBeUndefined();
+  });
+
+  it('fetchPriority=high is passed through when explicitly set', () => {
+    const { props } = call({
+      src: '/photo.jpg',
+      alt: '',
+      width: 100,
+      height: 100,
+      fetchPriority: 'high',
+    });
+    expect(props.fetchPriority).toBe('high');
+  });
+
+  it('loading=eager is respected when passed explicitly', () => {
+    const { props } = call({
+      src: '/photo.jpg',
+      alt: '',
+      width: 100,
+      height: 100,
+      loading: 'eager',
+    });
+    expect(props.loading).toBe('eager');
+  });
+
+  it('defaults to loading=lazy for non-priority images', () => {
+    const { props } = call({ src: '/photo.jpg', alt: '', width: 100, height: 100 });
+    expect(props.loading).toBe('lazy');
+  });
+
+  it('meta.priority is true when priority prop is set', () => {
+    const { meta } = call({ src: '/photo.jpg', alt: '', width: 100, height: 100, priority: true });
+    expect(meta.priority).toBe(true);
+  });
+
+  it('meta.priority is false by default', () => {
+    const { meta } = call({ src: '/photo.jpg', alt: '', width: 100, height: 100 });
+    expect(meta.priority).toBe(false);
+  });
+});
+
+describe('getImgProps() — unoptimized URLs', () => {
+  it('data: URLs bypass the loader and are passed through unchanged', () => {
+    const dataUrl = 'data:image/png;base64,abc123';
+    const { props, meta } = call({ src: dataUrl, alt: '', width: 100, height: 100 });
+    expect(props.src).toBe(dataUrl);
+    expect(meta.unoptimized).toBe(true);
+  });
+
+  it('blob: URLs bypass the loader and are passed through unchanged', () => {
+    const blobUrl = 'blob:http://localhost/abc-123';
+    const { props, meta } = call({ src: blobUrl, alt: '', width: 100, height: 100 });
+    expect(props.src).toBe(blobUrl);
+    expect(meta.unoptimized).toBe(true);
+  });
+
+  it('SVG src is unoptimized by default (dangerouslyAllowSVG=false)', () => {
+    const { meta } = call({ src: '/image.svg', alt: '', width: 100, height: 100 });
+    expect(meta.unoptimized).toBe(true);
+  });
+
+  it('absolute SVG URL is unoptimized (only the path is checked for extension)', () => {
+    const { meta } = call({
+      src: 'http://cdn.example.com/image.svg',
+      alt: '',
+      width: 100,
+      height: 100,
+    });
+    expect(meta.unoptimized).toBe(true);
+  });
+
+  it('SVG with query string is still unoptimized', () => {
+    const { meta } = call({ src: '/image.svg?v=2', alt: '', width: 100, height: 100 });
+    expect(meta.unoptimized).toBe(true);
+  });
+
+  it('unoptimized=true passes src through the loader but marks as unoptimized', () => {
+    const { meta } = call({
+      src: '/photo.jpg',
+      alt: '',
+      width: 100,
+      height: 100,
+      unoptimized: true,
+    });
+    expect(meta.unoptimized).toBe(true);
+  });
+});
+
+describe('getImgProps() — srcSet generation', () => {
+  it('generates a srcSet string with multiple widths', () => {
+    const { props } = call({ src: '/photo.jpg', alt: '', width: 400, height: 300 });
+    expect(props.srcSet).toContain('w');
+    expect(props.srcSet!.split(',').length).toBeGreaterThan(1);
+  });
+
+  it('srcSet contains the correct url-encoded src', () => {
+    const { props } = call({ src: '/my photo.jpg', alt: '', width: 400, height: 300 });
+    expect(props.srcSet).toContain(encodeURIComponent('/my photo.jpg'));
+  });
+
+  it('sizes prop is passed through', () => {
+    const { props } = call({
+      src: '/photo.jpg',
+      alt: '',
+      width: 800,
+      height: 600,
+      sizes: '(max-width: 768px) 100vw, 50vw',
+    });
+    expect(props.sizes).toBe('(max-width: 768px) 100vw, 50vw');
+  });
+
+  it('sizes=100vw produces a w-descriptor srcSet', () => {
+    const { props } = call({
+      src: '/photo.jpg',
+      alt: '',
+      width: 800,
+      height: 600,
+      sizes: '100vw',
+    });
+    expect(props.srcSet).toMatch(/\d+w/);
+  });
+
+  it('without sizes produces an x-descriptor srcSet', () => {
+    const { props } = call({ src: '/photo.jpg', alt: '', width: 400, height: 300 });
+    // No sizes → x-descriptor (1x, 2x)
+    expect(props.srcSet).toMatch(/\d+x/);
+  });
+});
+
 describe('getImgProps() — placeholder styles', () => {
   it('blur placeholder has backgroundImage with SVG data URL', () => {
     const { props } = call({

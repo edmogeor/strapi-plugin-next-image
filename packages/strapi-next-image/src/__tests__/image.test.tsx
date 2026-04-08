@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { render, screen, cleanup, waitFor, act } from '@testing-library/react';
 import React, { createRef } from 'react';
 import { Image } from '../image';
 
@@ -119,5 +119,105 @@ describe('<Image /> component', () => {
     });
     const link = document.head.querySelector('link[rel="preload"]');
     expect(link).toBeNull();
+  });
+});
+
+describe('<Image /> — loading behaviour', () => {
+  afterEach(cleanup);
+
+  it('does not set loading attribute when priority=true', () => {
+    render(<Image alt="test" src="/photo.jpg" width={400} height={300} priority />);
+    const img = screen.getByRole('img');
+    // priority images omit the loading attribute (no lazy loading)
+    expect(img.getAttribute('loading')).toBeNull();
+  });
+
+  it('sets loading="eager" when loading prop is "eager"', () => {
+    render(<Image alt="test" src="/photo.jpg" width={400} height={300} loading="eager" />);
+    const img = screen.getByRole('img');
+    expect(img.getAttribute('loading')).toBe('eager');
+  });
+
+  it('calls onLoad callback after image fires load event', async () => {
+    const onLoad = vi.fn();
+    render(<Image alt="test" src="/photo.jpg" width={200} height={150} onLoad={onLoad} />);
+    const img = screen.getByRole('img');
+
+    await act(async () => {
+      img.dispatchEvent(new Event('load'));
+    });
+
+    await waitFor(() => expect(onLoad).toHaveBeenCalledOnce());
+    expect(onLoad).toHaveBeenCalledWith(expect.objectContaining({ target: img }));
+  });
+
+  it('calls onLoadingComplete callback after image fires load event', async () => {
+    const onLoadingComplete = vi.fn();
+    render(
+      <Image
+        alt="test"
+        src="/photo.jpg"
+        width={200}
+        height={150}
+        onLoadingComplete={onLoadingComplete}
+      />,
+    );
+    const img = screen.getByRole('img');
+
+    await act(async () => {
+      img.dispatchEvent(new Event('load'));
+    });
+
+    await waitFor(() => expect(onLoadingComplete).toHaveBeenCalledOnce());
+    expect(onLoadingComplete).toHaveBeenCalledWith(img);
+  });
+
+  it('unoptimized image src is passed through without /api/next-image', () => {
+    render(<Image alt="test" src="/static/photo.jpg" width={200} height={150} unoptimized />);
+    const img = screen.getByRole('img');
+    expect(img.getAttribute('src')).toBe('/static/photo.jpg');
+    expect(img.getAttribute('src')).not.toContain('/api/next-image');
+  });
+
+  it('data: URL src is always unoptimized', () => {
+    const dataUrl = 'data:image/png;base64,abc123';
+    render(<Image alt="test" src={dataUrl} width={100} height={100} />);
+    const img = screen.getByRole('img');
+    expect(img.getAttribute('src')).toBe(dataUrl);
+  });
+});
+
+describe('<Image /> — config script injection', () => {
+  afterEach(cleanup);
+
+  it('injects a config script tag into the DOM', () => {
+    document.body.innerHTML = '';
+    render(<Image alt="test" src="/photo.jpg" width={100} height={100} />);
+    const script = document.querySelector('script');
+    expect(script).not.toBeNull();
+    expect(script!.innerHTML).toContain('__STRAPI_IMAGE_CONFIG__');
+  });
+
+  it('config script contains deviceSizes and imageSizes', () => {
+    document.body.innerHTML = '';
+    render(<Image alt="test" src="/photo.jpg" width={100} height={100} />);
+    const script = document.querySelector('script');
+    const json = JSON.parse(script!.innerHTML.replace('window.__STRAPI_IMAGE_CONFIG__=', ''));
+    expect(Array.isArray(json.deviceSizes)).toBe(true);
+    expect(Array.isArray(json.imageSizes)).toBe(true);
+  });
+
+  it('config script contains valid JSON (no unescaped </script> sequences)', () => {
+    document.body.innerHTML = '';
+    render(<Image alt="test" src="/photo.jpg" width={100} height={100} />);
+    const script = document.querySelector('script');
+    const raw = script!.innerHTML;
+    // The safeJsonForScript helper replaces < with \u003c so the JSON is safe
+    expect(raw).not.toContain('</script>');
+    // Verify the JSON parses correctly after stripping the assignment
+    const json = JSON.parse(raw.replace('window.__STRAPI_IMAGE_CONFIG__=', ''));
+    expect(json).toHaveProperty('deviceSizes');
+    expect(json).toHaveProperty('imageSizes');
+    expect(json).toHaveProperty('formats');
   });
 });
