@@ -14,34 +14,26 @@
   </p>
 </div>
 
-Next.js-style `<Image />` optimization for **any** React app powered by Strapi v5.
+Drop-in `next/image`-compatible `<Image />` for any React app backed by Strapi v5. Responsive `srcSet`, WebP/AVIF conversion, blur placeholders, and aggressive caching — powered by Sharp.
 
-Drop in two packages — a Strapi plugin that serves optimized images via Sharp, and a React component that's API-compatible with `next/image` — and get responsive `srcSet` generation, automatic WebP/AVIF conversion, blur placeholders, and aggressive caching out of the box.
+## Packages
 
----
+| Package                                                           | Description                                                    |
+| ----------------------------------------------------------------- | -------------------------------------------------------------- |
+| [`strapi-plugin-next-image`](./packages/strapi-plugin-next-image) | Strapi v5 plugin — exposes `GET /api/next-image` via Sharp     |
+| [`strapi-next-image`](./packages/strapi-next-image)               | React `<Image />` component — drop-in `next/image` replacement |
 
 ## Features
 
 - **Responsive images** — automatic `srcSet` and `sizes` for every breakpoint
-- **Format negotiation** — serves AVIF > WebP > JPEG based on the client's `Accept` header
-- **Blur placeholders** — auto-generated base64 blur thumbnails on upload, with a smooth fade-in
-- **Aggressive caching** — file-based cache with configurable TTL, ETags, and `Cache-Control: immutable`
-- **Animated image support** — detects animated GIF, WebP, and APNG and serves them untouched
+- **Format negotiation** — serves AVIF > WebP > JPEG based on `Accept` header
+- **Blur placeholders** — auto-generated base64 thumbnails with fade-in
+- **Aggressive caching** — file-based cache with configurable TTL, ETags, and `Cache-Control`
+- **Animated image support** — GIF, WebP, and APNG served untouched
 - **Priority / preload** — `priority` prop injects `<link rel="preload">` for LCP images
 - **Fill mode** — container-relative sizing, just like `next/image`
 - **Custom loaders** — point the component at any optimization endpoint
-- **Type-safe** — full TypeScript definitions, including a `StrapiMedia` type guard
-
----
-
-## Packages
-
-| Package                                                           | Description                                                       |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [`strapi-plugin-next-image`](./packages/strapi-plugin-next-image) | Strapi v5 plugin — exposes `GET /api/next-image` powered by Sharp |
-| [`strapi-next-image`](./packages/strapi-next-image)               | React `<Image />` component — drop-in `next/image` replacement    |
-
----
+- **Type-safe** — full TypeScript definitions including a `StrapiMedia` type guard
 
 ## Quick Start
 
@@ -49,10 +41,10 @@ Drop in two packages — a Strapi plugin that serves optimized images via Sharp,
 
 ```bash
 npm install strapi-plugin-next-image
-npm run build   # rebuild admin panel
+npm run build
 ```
 
-The plugin auto-registers the `/api/next-image` endpoint and starts generating blur placeholders for every new upload.
+The plugin auto-registers `/api/next-image` and generates blur placeholders for every upload.
 
 ### 2. Frontend (React)
 
@@ -64,38 +56,27 @@ npm install strapi-next-image
 import { initializeStrapiImage } from 'strapi-next-image';
 import Image from 'strapi-next-image';
 
-// 1. Fetch config and auto-route to Strapi before React renders
+// Call once at app entry point — syncs breakpoints from Strapi and sets the loader URL
 await initializeStrapiImage('https://cms.example.com');
 
-// 2. Render images anywhere in your app
 function Hero({ cover }) {
   return (
     <Image
-      src={cover} // StrapiMedia object — width, height, alt auto-populated
+      src={cover} // StrapiMedia object — width, height, alt, blurDataURL auto-populated
       sizes="(max-width: 768px) 100vw, 800px"
       fill
-      priority // preload for LCP
+      priority
       style={{ objectFit: 'cover' }}
     />
   );
 }
 ```
 
-Pass a `StrapiMedia` object to `src` and the component extracts `width`, `height`, `alt`, and `blurDataURL` for you. You can also pass a plain URL string if you supply those props manually.
-
----
+Pass a `StrapiMedia` object to `src` and the component extracts `width`, `height`, `alt`, and `blurDataURL` automatically. Plain URL strings work too if you supply those props manually.
 
 ## Usage
 
-### Blur Placeholders
-
-The Strapi plugin automatically generates a tiny base64 JPEG for every uploaded image and stores it in a `blurDataURL` field on the media entry. The React component picks this up and renders a blurred SVG overlay that fades out once the full image loads.
-
-No configuration needed — it works out of the box.
-
-### Manual Image Properties
-
-When you only have a URL (not a full `StrapiMedia` object), provide dimensions and alt text yourself:
+### Manual props (plain URL)
 
 ```tsx
 <Image
@@ -107,21 +88,13 @@ When you only have a URL (not a full `StrapiMedia` object), provide dimensions a
 />
 ```
 
-### Quality and Priority
-
-Override the default quality (75) and mark above-the-fold images for preloading:
+### Quality and priority
 
 ```tsx
-<Image
-  src={cover}
-  quality={90}
-  priority // injects <link rel="preload"> into <head>
-/>
+<Image src={cover} quality={90} priority />
 ```
 
-### Unoptimized Mode
-
-Bypass the optimization endpoint and render the original image directly:
+### Unoptimized
 
 ```tsx
 <Image src={cover} unoptimized />
@@ -129,49 +102,22 @@ Bypass the optimization endpoint and render the original image directly:
 
 ### `getImageProps`
 
-Need optimized URLs for a CSS `background-image` or a custom `<picture>` element? Use the utility function:
+For CSS `background-image` or custom `<picture>` elements:
 
 ```tsx
 import { getImageProps } from 'strapi-next-image';
 
-const { props } = getImageProps({
-  src: cover,
-  alt: 'Hero background',
-  sizes: '100vw',
-  fill: true,
-});
-
+const { props } = getImageProps({ src: cover, alt: 'Hero', sizes: '100vw', fill: true });
 // props.srcSet, props.src, props.width, props.height, etc.
 ```
 
 ### Custom Strapi URL
 
-If your Strapi server runs on a different origin (e.g., your frontend is on Vercel but Strapi is on AWS), you do **not** need to manually define a custom loader for every image.
-
-Simply calling `initializeStrapiImage('https://cms.mywebsite.com')` (as shown in the Configuration section below) automatically configures the default global image loader to point at your Strapi backend securely!
-
-_(If you still need to manually create one for a one-off image, you can import and pass `loader={createStrapiLoader('https://cms.example.com')}` into the component)._
-
----
+`initializeStrapiImage('https://cms.example.com')` configures the global loader — no per-image custom loaders needed. For a one-off override: `loader={createStrapiLoader('https://cms.example.com')}`.
 
 ## Configuration
 
-### Frontend (React)
-
-To keep your frontend breakpoints perfectly synchronized with your backend configuration without manual copying, call `initializeStrapiImage()` once at your app's entry point (e.g., `main.tsx` or `_app.tsx`).
-
-This fetches the allowed `deviceSizes`, `imageSizes`, and `formats` directly from the Strapi API and applies them globally:
-
-```ts
-import { initializeStrapiImage } from 'strapi-next-image';
-
-// Fetch config from Strapi before React renders
-await initializeStrapiImage('https://cms.example.com');
-```
-
-If you do not call this function, the component will safely fall back to the standard Next.js default breakpoints.
-
-Configure in `config/plugins.ts`:
+### Backend (`config/plugins.ts`)
 
 ```ts
 export default {
@@ -181,23 +127,23 @@ export default {
       imageSizes: [32, 48, 64, 96, 128, 256, 384],
       qualities: [75],
       formats: ['image/webp'],
-      minimumCacheTTL: 14400, // seconds (default: 4 hours)
+      minimumCacheTTL: 14400,
       dangerouslyAllowSVG: false,
-      blurSize: 8, // blur thumbnail width in px
+      blurSize: 8,
     },
   },
 };
 ```
 
-| Option                | Default                                         | Description                                |
-| --------------------- | ----------------------------------------------- | ------------------------------------------ |
-| `deviceSizes`         | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints for responsive images |
-| `imageSizes`          | `[32, 48, 64, 96, 128, 256, 384]`               | Fixed-width image sizes                    |
-| `qualities`           | `[75]`                                          | Allowed quality values                     |
-| `formats`             | `['image/webp']`                                | Output formats the endpoint will serve     |
-| `minimumCacheTTL`     | `14400`                                         | Cache lifetime in seconds                  |
-| `dangerouslyAllowSVG` | `false`                                         | Allow SVG passthrough                      |
-| `blurSize`            | `8`                                             | Width of blur placeholder thumbnails       |
+| Option                | Default                                         | Description                |
+| --------------------- | ----------------------------------------------- | -------------------------- |
+| `deviceSizes`         | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints       |
+| `imageSizes`          | `[32, 48, 64, 96, 128, 256, 384]`               | Fixed-width sizes          |
+| `qualities`           | `[75]`                                          | Allowed quality values     |
+| `formats`             | `['image/webp']`                                | Output formats             |
+| `minimumCacheTTL`     | `14400`                                         | Cache lifetime in seconds  |
+| `dangerouslyAllowSVG` | `false`                                         | Allow SVG passthrough      |
+| `blurSize`            | `8`                                             | Blur thumbnail width in px |
 
 ### API Endpoint
 
@@ -212,10 +158,6 @@ GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 | `q`   | No       | Quality 1–100 (default 75)                       |
 | `f`   | No       | Format override (`webp`, `avif`)                 |
 
-Responds with optimized binary image data, `Cache-Control: public, max-age={isDev ? 0 : TTL}, must-revalidate`, and an `ETag` for conditional requests.
-
----
-
 ## Development
 
 ```bash
@@ -226,34 +168,24 @@ npm run build --workspaces
 npm run test --workspaces
 ```
 
-### Visual Testing
-
-The `examples/` directory contains a test Strapi app and a Vite + React frontend for manually testing the full stack.
+The `examples/` directory has a full Strapi + Vite/React stack for manual testing:
 
 ```bash
-# Start both Strapi and the frontend in one command
-npm run dev
+npm run dev  # starts both Strapi and the frontend
 ```
 
-Or run them separately:
+Or separately:
 
 ```bash
-# Terminal 1 — Strapi backend
 cd examples/strapi && npm install && npm run develop
-
-# Terminal 2 — React frontend
 cd examples/frontend && npm install && npm run dev
 ```
 
-1. Create an admin account at `http://localhost:1337/admin`
-2. Upload images via the Media Library
-3. Open `http://localhost:5173` to see all component features in action
-
----
+Visit `http://localhost:1337/admin` to upload images, then `http://localhost:5173` to see the component in action.
 
 ## Attribution
 
-The `strapi-next-image` React component includes code ported from and adapted from the [Next.js](https://github.com/vercel/next.js) Image component by Vercel, Inc., licensed under the MIT License. See [NOTICE](./NOTICE) for details.
+Includes code ported from the [Next.js](https://github.com/vercel/next.js) Image component by Vercel, Inc. (MIT). See [NOTICE](./NOTICE).
 
 ## License
 
