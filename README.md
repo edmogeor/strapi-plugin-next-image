@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/edmogeor/strapi-plugin-next-image/main/assets/logo.png" width="140" alt="strapi-plugin-next-image logo"/>
-  <h1>strapi-plugin-next-image</h1>
+  <h1>Next.js &lt;Image&gt; for Strapi</h1>
   <p>
     <a href="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml">
       <img src="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml/badge.svg" alt="CI"/>
