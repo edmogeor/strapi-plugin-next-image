@@ -11,9 +11,7 @@ describe('strapiLoader (default)', () => {
       src: '/uploads/photo.jpg',
       width: 640,
     });
-    expect(url).toBe(
-      '/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
-    );
+    expect(url).toBe('/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75');
   });
 
   it('URL-encodes src', () => {
@@ -22,9 +20,7 @@ describe('strapiLoader (default)', () => {
       src: '/uploads/my photo (1).jpg',
       width: 640,
     });
-    expect(url).toContain(
-      `url=${encodeURIComponent('/uploads/my photo (1).jpg')}`
-    );
+    expect(url).toContain(`url=${encodeURIComponent('/uploads/my photo (1).jpg')}`);
   });
 
   it('prepends config.path automatically if available', () => {
@@ -34,7 +30,7 @@ describe('strapiLoader (default)', () => {
       width: 640,
     });
     expect(url).toBe(
-      'https://cms.mywebsite.com/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
+      'https://cms.mywebsite.com/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75',
     );
   });
 
@@ -69,9 +65,7 @@ describe('createStrapiLoader()', () => {
       src: '/uploads/photo.jpg',
       width: 640,
     });
-    expect(url).toBe(
-      'http://localhost:1337/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75'
-    );
+    expect(url).toBe('http://localhost:1337/api/next-image?url=%2Fuploads%2Fphoto.jpg&w=640&q=75');
   });
 
   it('strips trailing slash from base URL', () => {

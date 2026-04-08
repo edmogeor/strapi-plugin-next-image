@@ -26,6 +26,7 @@ out/
 # Misc
 references/
 coverage/
+.fallow/
 
 # Examples — generated files
 examples/strapi/.tmp/

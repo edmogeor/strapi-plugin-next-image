@@ -1,6 +1,8 @@
 import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Core } from '@strapi/types';
+import { getUploadFileRepository, type PluginConfig } from '../types';
+import { isAnimated } from '../image-utils';
 
 const SUPPORTED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -9,52 +11,6 @@ const SUPPORTED_MIME_TYPES = new Set([
   'image/avif',
   'image/gif',
 ]);
-
-/**
- * Detect if an image buffer is animated (multi-frame GIF, animated WebP/PNG).
- */
-function isAnimated(buffer: Buffer, mime: string): boolean {
-  if (mime === 'image/gif') {
-    let count = 0;
-    for (let i = 0; i < buffer.length - 1; i++) {
-      if (buffer[i] === 0x2c) {
-        count++;
-        if (count > 1) return true;
-      }
-    }
-    return false;
-  }
-
-  if (mime === 'image/webp') {
-    for (let i = 0; i < Math.min(buffer.length - 4, 1000); i++) {
-      if (
-        buffer[i] === 0x41 &&
-        buffer[i + 1] === 0x4e &&
-        buffer[i + 2] === 0x4d &&
-        (buffer[i + 3] === 0x46 || buffer[i + 3] === 0x00)
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  if (mime === 'image/png') {
-    for (let i = 0; i < Math.min(buffer.length - 4, 2000); i++) {
-      if (
-        buffer[i] === 0x61 &&
-        buffer[i + 1] === 0x63 &&
-        buffer[i + 2] === 0x54 &&
-        buffer[i + 3] === 0x4c
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  return false;
-}
 
 export default ({ strapi }: { strapi: Core.Strapi }) => {
   // URLs confirmed to have a blurDataURL — skip DB lookup on future requests.
@@ -83,7 +39,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
 
       blurGenerating.add(fileUrl);
       try {
-        const file = await (strapi.db.query('plugin::upload.file') as any).findOne({
+        const repo = getUploadFileRepository(strapi);
+        const file = await repo.findOne({
           where: { url: fileUrl },
           select: ['id', 'mime', 'blurDataURL'],
         });
@@ -97,7 +54,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
 
         const blurDataURL = await service.generate(fileUrl, file.mime);
         if (blurDataURL) {
-          await (strapi.db.query('plugin::upload.file') as any).update({
+          await repo.update({
             where: { id: file.id },
             data: { blurDataURL },
           });
@@ -132,9 +89,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
         return null;
       }
 
-      const pluginConfig = strapi.config.get('plugin::next-image') as {
-        blurSize?: number;
-      };
+      const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
       const blurSize = pluginConfig.blurSize || 8;
 
       let sharpFn: (input: Buffer) => import('sharp').Sharp;

@@ -1,14 +1,11 @@
 import * as crypto from 'crypto';
+import type { Core } from '@strapi/types';
+import type { Context } from 'koa';
+import type { PluginConfig } from '../types';
 
-export default {
-  get(ctx: any) {
-    const pluginConfig = strapi.config.get('plugin::next-image') as {
-      deviceSizes: number[];
-      imageSizes: number[];
-      qualities: number[];
-      formats: string[];
-      dangerouslyAllowSVG: boolean;
-    };
+const controller: Core.Controller = {
+  get(ctx: Context) {
+    const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
 
     // Return only the public frontend-relevant settings.
     // We intentionally exclude sensitive settings like minimumCacheTTL
@@ -39,3 +36,5 @@ export default {
     ctx.body = body;
   },
 };
+
+export default controller;

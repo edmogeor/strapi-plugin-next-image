@@ -1,8 +1,18 @@
 import type { Core } from '@strapi/types';
 import type { Context } from 'koa';
+import type { PluginConfig, HttpError, CacheService } from '../types';
+import type { OptimizeParams, OptimizeResult } from '../services/image-optimize';
 
-function getService(strapi: Core.Strapi, name: string) {
-  return strapi.plugin('next-image').service(name);
+interface ImageOptimizeService {
+  optimize(params: OptimizeParams): Promise<OptimizeResult>;
+}
+
+function getCacheService(strapi: Core.Strapi): CacheService {
+  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
+}
+
+function getOptimizeService(strapi: Core.Strapi): ImageOptimizeService {
+  return strapi.plugin('next-image').service('next-image') as unknown as ImageOptimizeService;
 }
 
 /**
@@ -48,17 +58,10 @@ const controller: Core.Controller = {
     }
 
     // --- Load plugin config ---
-    const pluginConfig = strapi.config.get('plugin::next-image') as {
-      deviceSizes: number[];
-      imageSizes: number[];
-      qualities: number[];
-      formats: string[];
-      minimumCacheTTL: number;
-      dangerouslyAllowSVG: boolean;
-    };
+    const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
 
     const allSizes = [...pluginConfig.deviceSizes, ...pluginConfig.imageSizes].sort(
-      (a, b) => a - b
+      (a, b) => a - b,
     );
 
     // --- Validate width ---
@@ -89,10 +92,7 @@ const controller: Core.Controller = {
       outputFormat = fmtMap[f] || null;
     }
     if (!outputFormat) {
-      outputFormat = getSupportedMimeType(
-        ctx.get('accept') || '',
-        pluginConfig.formats
-      );
+      outputFormat = getSupportedMimeType(ctx.get('accept') || '', pluginConfig.formats);
     }
 
     const isDev = process.env.NODE_ENV !== 'production';
@@ -101,7 +101,7 @@ const controller: Core.Controller = {
     // --- Fast-path: 304 via ETag without reading the image buffer ---
     const ifNoneMatch = ctx.get('if-none-match');
     if (ifNoneMatch) {
-      const cacheService = getService(strapi, 'cache');
+      const cacheService = getCacheService(strapi);
       const formatKey = outputFormat || 'original';
       const peek = await cacheService.peekEtag(url, width, quality, formatKey);
       if (peek && peek.etag === ifNoneMatch) {
@@ -115,7 +115,7 @@ const controller: Core.Controller = {
 
     // --- Call the optimization service ---
     try {
-      const optimizeService = getService(strapi, 'next-image');
+      const optimizeService = getOptimizeService(strapi);
       const result = await optimizeService.optimize({
         url,
         width,
@@ -133,10 +133,7 @@ const controller: Core.Controller = {
       if (result.etag) {
         ctx.set('ETag', result.etag);
       }
-      ctx.set(
-        'Content-Disposition',
-        `inline; filename="${result.filename}"`
-      );
+      ctx.set('Content-Disposition', `inline; filename="${result.filename}"`);
 
       // Final ETag check (handles the case where optimize() produced the same
       // content as what the client already has, e.g. after a stale revalidation)
@@ -147,10 +144,11 @@ const controller: Core.Controller = {
 
       ctx.set('Content-Length', String(result.buffer.length));
       ctx.body = result.buffer;
-    } catch (err: any) {
-      if (err.status) {
-        ctx.status = err.status;
-        ctx.body = { error: err.message };
+    } catch (err: unknown) {
+      const httpErr = err as Partial<HttpError>;
+      if (typeof httpErr.status === 'number') {
+        ctx.status = httpErr.status;
+        ctx.body = { error: httpErr.message };
       } else {
         strapi.log.error('Image optimization error:', err);
         ctx.status = 500;

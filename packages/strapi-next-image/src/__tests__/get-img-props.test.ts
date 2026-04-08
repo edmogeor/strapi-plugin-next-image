@@ -70,15 +70,15 @@ describe('getImgProps() — StrapiMedia handling', () => {
 
 describe('getImgProps() — dev-mode errors', () => {
   it('throws for fill + width', () => {
-    expect(() =>
-      call({ src: '/test.png', alt: '', fill: true, width: 100 })
-    ).toThrow('has both "width" and "fill"');
+    expect(() => call({ src: '/test.png', alt: '', fill: true, width: 100 })).toThrow(
+      'has both "width" and "fill"',
+    );
   });
 
   it('throws for fill + height', () => {
-    expect(() =>
-      call({ src: '/test.png', alt: '', fill: true, height: 100 })
-    ).toThrow('has both "height" and "fill"');
+    expect(() => call({ src: '/test.png', alt: '', fill: true, height: 100 })).toThrow(
+      'has both "height" and "fill"',
+    );
   });
 
   it('throws for fill + style.position', () => {
@@ -88,7 +88,7 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         fill: true,
         style: { position: 'relative' },
-      })
+      }),
     ).toThrow('both "fill" and "style.position"');
   });
 
@@ -99,7 +99,7 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         fill: true,
         style: { width: '50%' },
-      })
+      }),
     ).toThrow('both "fill" and "style.width"');
   });
 
@@ -110,20 +110,20 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         fill: true,
         style: { height: '50%' },
-      })
+      }),
     ).toThrow('both "fill" and "style.height"');
   });
 
   it('throws for missing width (string src, no fill)', () => {
-    expect(() =>
-      call({ src: '/test.png', alt: '', height: 100 })
-    ).toThrow('missing required "width"');
+    expect(() => call({ src: '/test.png', alt: '', height: 100 })).toThrow(
+      'missing required "width"',
+    );
   });
 
   it('throws for missing height (string src, no fill)', () => {
-    expect(() =>
-      call({ src: '/test.png', alt: '', width: 100 })
-    ).toThrow('missing required "height"');
+    expect(() => call({ src: '/test.png', alt: '', width: 100 })).toThrow(
+      'missing required "height"',
+    );
   });
 
   it('throws for invalid width (NaN)', () => {
@@ -133,7 +133,7 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         width: 'abc' as any,
         height: 100,
-      })
+      }),
     ).toThrow('invalid "width"');
   });
 
@@ -144,7 +144,7 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         width: 100,
         height: 'abc' as any,
-      })
+      }),
     ).toThrow('invalid "height"');
   });
 
@@ -156,7 +156,7 @@ describe('getImgProps() — dev-mode errors', () => {
         width: 100,
         height: 100,
         loading: 'invalid' as any,
-      })
+      }),
     ).toThrow('invalid "loading"');
   });
 
@@ -169,7 +169,7 @@ describe('getImgProps() — dev-mode errors', () => {
         height: 100,
         priority: true,
         loading: 'lazy',
-      })
+      }),
     ).toThrow('both "priority" and "loading=\'lazy\'"');
   });
 
@@ -182,10 +182,9 @@ describe('getImgProps() — dev-mode errors', () => {
         height: 100,
         priority: true,
         loading: 'lazy',
-      })
+      }),
     ).toThrow('both "priority" and "loading=\'lazy\'"');
   });
-
 
   it('throws for invalid placeholder', () => {
     expect(() =>
@@ -195,20 +194,20 @@ describe('getImgProps() — dev-mode errors', () => {
         width: 100,
         height: 100,
         placeholder: 'invalid' as any,
-      })
+      }),
     ).toThrow('invalid "placeholder"');
   });
 
   it('throws for src with leading whitespace', () => {
-    expect(() =>
-      call({ src: ' /test.png', alt: '', width: 100, height: 100 })
-    ).toThrow('cannot start with a space');
+    expect(() => call({ src: ' /test.png', alt: '', width: 100, height: 100 })).toThrow(
+      'cannot start with a space',
+    );
   });
 
   it('throws for src with trailing whitespace', () => {
-    expect(() =>
-      call({ src: '/test.png ', alt: '', width: 100, height: 100 })
-    ).toThrow('cannot end with a space');
+    expect(() => call({ src: '/test.png ', alt: '', width: 100, height: 100 })).toThrow(
+      'cannot end with a space',
+    );
   });
 });
 
@@ -247,9 +246,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       loader: ({ src }) => src, // returns src unchanged
     });
-    expect(
-      warningMessages.some((m) => m.includes('does not implement width'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('does not implement width'))).toBe(true);
   });
 
   it('warns about deprecated onLoadingComplete', () => {
@@ -258,11 +255,9 @@ describe('getImgProps() — dev-mode warnings', () => {
       alt: '',
       width: 100,
       height: 100,
-      onLoadingComplete: () => { },
+      onLoadingComplete: () => {},
     });
-    expect(
-      warningMessages.some((m) => m.includes('deprecated "onLoadingComplete"'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('deprecated "onLoadingComplete"'))).toBe(true);
   });
 
   it('warns about ref in rest', () => {
@@ -274,9 +269,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       // @ts-expect-error testing ref warning
       ref: { current: null },
     });
-    expect(
-      warningMessages.some((m) => m.includes('unsupported "ref"'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('unsupported "ref"'))).toBe(true);
   });
 
   it('throws for blur without blurDataURL', () => {
@@ -287,7 +280,7 @@ describe('getImgProps() — dev-mode warnings', () => {
         width: 100,
         height: 100,
         placeholder: 'blur',
-      })
+      }),
     ).toThrow('missing the "blurDataURL" property');
   });
 
@@ -299,9 +292,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       layout: 'responsive',
     });
-    expect(
-      warningMessages.some((m) => m.includes('legacy prop "layout"'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('legacy prop "layout"'))).toBe(true);
   });
 
   it('warns about legacy objectFit prop', () => {
@@ -312,9 +303,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       objectFit: 'cover',
     });
-    expect(
-      warningMessages.some((m) => m.includes('legacy prop "objectFit"'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('legacy prop "objectFit"'))).toBe(true);
   });
 
   it('warns about legacy objectPosition prop', () => {
@@ -325,9 +314,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       objectPosition: 'center',
     });
-    expect(
-      warningMessages.some((m) => m.includes('legacy prop "objectPosition"'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('legacy prop "objectPosition"'))).toBe(true);
   });
 
   it('warns about small image with placeholder', () => {
@@ -339,9 +326,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       placeholder: 'blur',
       blurDataURL: 'data:image/png;base64,abc',
     });
-    expect(
-      warningMessages.some((m) => m.includes('smaller than 40x40'))
-    ).toBe(true);
+    expect(warningMessages.some((m) => m.includes('smaller than 40x40'))).toBe(true);
   });
 });
 
@@ -393,9 +378,7 @@ describe('getImgProps() — placeholder styles', () => {
       placeholder: 'blur',
       blurDataURL: 'data:image/png;base64,abc',
     });
-    expect(props.style.backgroundImage).toContain(
-      'data:image/svg+xml;charset=utf-8,'
-    );
+    expect(props.style.backgroundImage).toContain('data:image/svg+xml;charset=utf-8,');
     expect(props.style.backgroundSize).toBeDefined();
     expect(props.style.backgroundPosition).toBeDefined();
     expect(props.style.backgroundRepeat).toBe('no-repeat');
@@ -409,9 +392,7 @@ describe('getImgProps() — placeholder styles', () => {
       height: 100,
       placeholder: 'data:image/png;base64,custom',
     });
-    expect(props.style.backgroundImage).toBe(
-      'url("data:image/png;base64,custom")'
-    );
+    expect(props.style.backgroundImage).toBe('url("data:image/png;base64,custom")');
   });
 
   it('empty placeholder has no background styles', () => {

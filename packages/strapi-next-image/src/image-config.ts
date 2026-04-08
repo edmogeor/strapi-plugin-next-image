@@ -32,7 +32,9 @@ async function fetchAndApplyConfig(apiBaseUrl: string): Promise<void> {
       ...(config.imageSizes && { imageSizes: config.imageSizes }),
       ...(config.qualities && { qualities: config.qualities }),
       ...(config.formats && { formats: config.formats }),
-      ...(typeof config.dangerouslyAllowSVG === 'boolean' && { dangerouslyAllowSVG: config.dangerouslyAllowSVG }),
+      ...(typeof config.dangerouslyAllowSVG === 'boolean' && {
+        dangerouslyAllowSVG: config.dangerouslyAllowSVG,
+      }),
     };
   } catch (err) {
     console.error('[strapi-next-image] Error fetching config:', err);
@@ -67,15 +69,17 @@ export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
         ...(Array.isArray(embedded.imageSizes) && { imageSizes: embedded.imageSizes }),
         ...(Array.isArray(embedded.qualities) && { qualities: embedded.qualities }),
         ...(Array.isArray(embedded.formats) && { formats: embedded.formats }),
-        ...(typeof embedded.dangerouslyAllowSVG === 'boolean' && { dangerouslyAllowSVG: embedded.dangerouslyAllowSVG }),
+        ...(typeof embedded.dangerouslyAllowSVG === 'boolean' && {
+          dangerouslyAllowSVG: embedded.dangerouslyAllowSVG,
+        }),
       };
     }
     // Still defer a fresh fetch in case the server config has changed since the last SSR.
-    setTimeout(() => { fetchAndApplyConfig(apiBaseUrl); }, 0);
+    setTimeout(() => {
+      fetchAndApplyConfig(apiBaseUrl);
+    }, 0);
   } else {
     // Server: await so SSR renders with the final config
     await fetchAndApplyConfig(apiBaseUrl);
   }
 }
-
-

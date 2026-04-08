@@ -7,9 +7,7 @@ afterEach(cleanup);
 
 describe('<Image /> component', () => {
   it('renders img with correct attributes', () => {
-    render(
-      <Image alt="test image" src="/photo.jpg" width={400} height={300} />
-    );
+    render(<Image alt="test image" src="/photo.jpg" width={400} height={300} />);
     const img = screen.getByRole('img');
     expect(img).toBeDefined();
     expect(img.getAttribute('alt')).toBe('test image');
@@ -41,7 +39,7 @@ describe('<Image /> component', () => {
         data-testid="hero"
         id="hero-img"
         aria-label="Hero"
-      />
+      />,
     );
     const img = screen.getByTestId('hero');
     expect(img.id).toBe('hero-img');
@@ -56,7 +54,7 @@ describe('<Image /> component', () => {
         width={100}
         height={100}
         style={{ maxWidth: '100%', height: 'auto' }}
-      />
+      />,
     );
     const img = screen.getByRole('img');
     expect(img.style.color).toBe('transparent');
@@ -66,36 +64,18 @@ describe('<Image /> component', () => {
 
   it('forwards ref to img element', () => {
     const ref = createRef<HTMLImageElement>();
-    render(
-      <Image
-        ref={ref}
-        alt="test"
-        src="/photo.jpg"
-        width={100}
-        height={100}
-      />
-    );
+    render(<Image ref={ref} alt="test" src="/photo.jpg" width={100} height={100} />);
     expect(ref.current).toBeInstanceOf(HTMLImageElement);
   });
 
   it('renders fetchpriority="high" when fetchPriority="high" is passed', () => {
-    render(
-      <Image
-        alt="test"
-        src="/photo.jpg"
-        width={100}
-        height={100}
-        fetchPriority="high"
-      />
-    );
+    render(<Image alt="test" src="/photo.jpg" width={100} height={100} fetchPriority="high" />);
     const img = screen.getByRole('img');
     expect(img.getAttribute('fetchpriority')).toBe('high');
   });
 
   it('does not render fetchpriority attribute when fetchPriority is not passed', () => {
-    render(
-      <Image alt="test" src="/photo.jpg" width={100} height={100} />
-    );
+    render(<Image alt="test" src="/photo.jpg" width={100} height={100} />);
     const img = screen.getByRole('img');
     // fetchpriority should be absent (not "auto") to avoid SSR/client mismatch
     expect(img.getAttribute('fetchpriority')).toBeNull();
@@ -114,25 +94,13 @@ describe('<Image /> component', () => {
     expect(img.getAttribute('alt')).toBe('A photo');
     expect(img.getAttribute('width')).toBe('800');
     expect(img.getAttribute('height')).toBe('600');
-    expect(img.getAttribute('src')).toContain(
-      encodeURIComponent('/uploads/photo.jpg')
-    );
+    expect(img.getAttribute('src')).toContain(encodeURIComponent('/uploads/photo.jpg'));
   });
 
   it('appends preload link when priority=true', async () => {
-    document.head
-      .querySelectorAll('link[rel="preload"]')
-      .forEach((l) => l.remove());
+    document.head.querySelectorAll('link[rel="preload"]').forEach((l) => l.remove());
 
-    render(
-      <Image
-        alt="test"
-        src="/priority.jpg"
-        width={100}
-        height={100}
-        priority
-      />
-    );
+    render(<Image alt="test" src="/priority.jpg" width={100} height={100} priority />);
 
     await waitFor(() => {
       const link = document.head.querySelector('link[rel="preload"]');
@@ -141,13 +109,9 @@ describe('<Image /> component', () => {
   });
 
   it('does not append preload link by default', async () => {
-    document.head
-      .querySelectorAll('link[rel="preload"]')
-      .forEach((l) => l.remove());
+    document.head.querySelectorAll('link[rel="preload"]').forEach((l) => l.remove());
 
-    render(
-      <Image alt="test" src="/no-preload.jpg" width={100} height={100} />
-    );
+    render(<Image alt="test" src="/no-preload.jpg" width={100} height={100} />);
 
     // Give useEffect a chance to run, then verify no link was added
     await waitFor(() => {

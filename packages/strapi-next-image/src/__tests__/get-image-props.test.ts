@@ -92,8 +92,6 @@ describe('getImageProps()', () => {
     expect(props.loading).toBeUndefined();
   });
 
-
-
   it('should handle fetchPriority', () => {
     const { props } = getImageProps({
       alt: 'a nice desc',
@@ -179,9 +177,7 @@ describe('getImageProps()', () => {
       height: 32,
     });
     // 32 → 32; 64 → 64; widths = [32, 64]
-    expect(props.srcSet).toBe(
-      `${opt('/test.png', 32)} 1x, ${opt('/test.png', 64)} 2x`
-    );
+    expect(props.srcSet).toBe(`${opt('/test.png', 32)} 1x, ${opt('/test.png', 64)} 2x`);
     expect(props.src).toBe(opt('/test.png', 64));
   });
 
@@ -193,9 +189,7 @@ describe('getImageProps()', () => {
       height: 256,
     });
     // 256 → 256; 512 → 640; widths = [256, 640]
-    expect(props.srcSet).toBe(
-      `${opt('/test.png', 256)} 1x, ${opt('/test.png', 640)} 2x`
-    );
+    expect(props.srcSet).toBe(`${opt('/test.png', 256)} 1x, ${opt('/test.png', 640)} 2x`);
     expect(props.src).toBe(opt('/test.png', 640));
   });
 
@@ -207,9 +201,7 @@ describe('getImageProps()', () => {
       height: 512,
     });
     // 512 → 640; 1024 → 1080; widths = [640, 1080]
-    expect(props.srcSet).toBe(
-      `${opt('/test.png', 640)} 1x, ${opt('/test.png', 1080)} 2x`
-    );
+    expect(props.srcSet).toBe(`${opt('/test.png', 640)} 1x, ${opt('/test.png', 1080)} 2x`);
     expect(props.src).toBe(opt('/test.png', 1080));
   });
 
@@ -239,9 +231,7 @@ describe('getImageProps()', () => {
     // deviceSizes[0] = 640, 100vw → smallestRatio = 1.0
     // allSizes >= 640: [640, 750, 828, 1080, 1200, 1920, 2048, 3840]
     const expectedWidths = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-    const expectedSrcSet = expectedWidths
-      .map((w) => `${opt('/test.png', w)} ${w}w`)
-      .join(', ');
+    const expectedSrcSet = expectedWidths.map((w) => `${opt('/test.png', w)} ${w}w`).join(', ');
     expect(props.srcSet).toBe(expectedSrcSet);
     expect(props.src).toBe(opt('/test.png', 3840));
   });
@@ -290,7 +280,7 @@ describe('getImageProps()', () => {
         `https://example.com${src}?w=${width}&q=${quality || 75}`,
     });
     expect(props.srcSet).toBe(
-      'https://example.com/test.png?w=128&q=75 1x, https://example.com/test.png?w=256&q=75 2x'
+      'https://example.com/test.png?w=128&q=75 1x, https://example.com/test.png?w=256&q=75 2x',
     );
     expect(props.src).toBe('https://example.com/test.png?w=256&q=75');
   });

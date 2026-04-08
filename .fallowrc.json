@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignoreDependencies": ["koa", "vite", "@vitejs/plugin-react"],
+  "publicPackages": ["strapi-next-image"],
+  "dynamicallyLoaded": ["examples/**"],
+  "overrides": [
+    {
+      "files": ["examples/**"],
+      "rules": { "unresolved-imports": "off" }
+    }
+  ]
+}

@@ -20,24 +20,9 @@ import {
 
 const VALID_LOADING_VALUES = ['lazy', 'eager', undefined] as const;
 
-const INVALID_BACKGROUND_SIZE_VALUES = [
-  '-moz-initial',
-  'fill',
-  'none',
-  'scale-down',
-  undefined,
-];
+import { warnOnce } from './warn-once';
 
-let warnedSet: Set<string> | undefined;
-function warnOnce(msg: string) {
-  if (typeof console !== 'undefined') {
-    if (!warnedSet) warnedSet = new Set();
-    if (!warnedSet.has(msg)) {
-      warnedSet.add(msg);
-      console.warn(msg);
-    }
-  }
-}
+const INVALID_BACKGROUND_SIZE_VALUES = ['-moz-initial', 'fill', 'none', 'scale-down', undefined];
 
 // LCP detection: track all images for PerformanceObserver
 let perfObserver: PerformanceObserver | undefined;
@@ -56,7 +41,7 @@ function getInt(x: unknown): number | undefined {
 function getWidths(
   { deviceSizes, allSizes }: ImageConfig,
   width: number | undefined,
-  sizes: string | undefined
+  sizes: string | undefined,
 ): { widths: number[]; kind: 'w' | 'x' } {
   if (sizes) {
     const viewportWidthRe = /(^|\s)(1?\d?\d)vw/g;
@@ -79,9 +64,7 @@ function getWidths(
 
   const widths = [
     ...new Set(
-      [width, width * 2].map(
-        (w) => allSizes.find((p) => p >= w) || allSizes[allSizes.length - 1]
-      )
+      [width, width * 2].map((w) => allSizes.find((p) => p >= w) || allSizes[allSizes.length - 1]),
     ),
   ];
   return { widths, kind: 'x' };
@@ -123,9 +106,7 @@ function generateImgAttrs({
 
   return {
     sizes: !sizes && kind === 'w' ? '100vw' : sizes,
-    srcSet: widths
-      .map((w, i) => `${makeUrl(w)} ${kind === 'w' ? w : i + 1}${kind}`)
-      .join(', '),
+    srcSet: widths.map((w, i) => `${makeUrl(w)} ${kind === 'w' ? w : i + 1}${kind}`).join(', '),
     src: makeUrl(widths[last]),
   };
 }
@@ -168,7 +149,7 @@ export function getImgProps(
     imgConf: ImageConfigComplete;
     showAltText?: boolean;
     blurComplete?: boolean;
-  }
+  },
 ): {
   props: ImgProps;
   meta: {
@@ -258,8 +239,7 @@ export function getImgProps(
     alt = altProp;
   }
 
-  let isLazy =
-    !priority && (loading === 'lazy' || typeof loading === 'undefined');
+  let isLazy = !priority && (loading === 'lazy' || typeof loading === 'undefined');
   if (!src || src.startsWith('data:') || src.startsWith('blob:')) {
     unoptimized = true;
     isLazy = false;
@@ -267,11 +247,7 @@ export function getImgProps(
   if (config.unoptimized) {
     unoptimized = true;
   }
-  if (
-    isDefaultLoader &&
-    !config.dangerouslyAllowSVG &&
-    src.split('?', 1)[0].endsWith('.svg')
-  ) {
+  if (isDefaultLoader && !config.dangerouslyAllowSVG && src.split('?', 1)[0].endsWith('.svg')) {
     unoptimized = true;
   }
 
@@ -283,69 +259,65 @@ export function getImgProps(
     } else {
       if (/^[\x00-\x20]/.test(src)) {
         throw new Error(
-          `Image with src "${src}" cannot start with a space or control character. The href property must be a valid URL.`
+          `Image with src "${src}" cannot start with a space or control character. The href property must be a valid URL.`,
         );
       }
       if (/[\x00-\x20]$/.test(src)) {
         throw new Error(
-          `Image with src "${src}" cannot end with a space or control character. The href property must be a valid URL.`
+          `Image with src "${src}" cannot end with a space or control character. The href property must be a valid URL.`,
         );
       }
       if (fill) {
         if (width) {
           throw new Error(
-            `Image with src "${src}" has both "width" and "fill" properties. Only one should be used.`
+            `Image with src "${src}" has both "width" and "fill" properties. Only one should be used.`,
           );
         }
         if (height) {
           throw new Error(
-            `Image with src "${src}" has both "height" and "fill" properties. Only one should be used.`
+            `Image with src "${src}" has both "height" and "fill" properties. Only one should be used.`,
           );
         }
         if (style?.position && style.position !== 'absolute') {
           throw new Error(
-            `Image with src "${src}" has both "fill" and "style.position" properties. Images with "fill" always use position absolute - it cannot be modified.`
+            `Image with src "${src}" has both "fill" and "style.position" properties. Images with "fill" always use position absolute - it cannot be modified.`,
           );
         }
         if (style?.width && style.width !== '100%') {
           throw new Error(
-            `Image with src "${src}" has both "fill" and "style.width" properties. Images with "fill" always use width 100% - it cannot be modified.`
+            `Image with src "${src}" has both "fill" and "style.width" properties. Images with "fill" always use width 100% - it cannot be modified.`,
           );
         }
         if (style?.height && style.height !== '100%') {
           throw new Error(
-            `Image with src "${src}" has both "fill" and "style.height" properties. Images with "fill" always use height 100% - it cannot be modified.`
+            `Image with src "${src}" has both "fill" and "style.height" properties. Images with "fill" always use height 100% - it cannot be modified.`,
           );
         }
       } else if (!isStrapiMedia(srcProp)) {
         if (typeof widthInt === 'undefined') {
-          throw new Error(
-            `Image with src "${src}" is missing required "width" property.`
-          );
+          throw new Error(`Image with src "${src}" is missing required "width" property.`);
         } else if (isNaN(widthInt)) {
           throw new Error(
-            `Image with src "${src}" has invalid "width" property. Expected a numeric value in pixels but received "${width}".`
+            `Image with src "${src}" has invalid "width" property. Expected a numeric value in pixels but received "${width}".`,
           );
         }
         if (typeof heightInt === 'undefined') {
-          throw new Error(
-            `Image with src "${src}" is missing required "height" property.`
-          );
+          throw new Error(`Image with src "${src}" is missing required "height" property.`);
         } else if (isNaN(heightInt)) {
           throw new Error(
-            `Image with src "${src}" has invalid "height" property. Expected a numeric value in pixels but received "${height}".`
+            `Image with src "${src}" has invalid "height" property. Expected a numeric value in pixels but received "${height}".`,
           );
         }
       }
     }
     if (!VALID_LOADING_VALUES.includes(loading)) {
       throw new Error(
-        `Image with src "${src}" has invalid "loading" property. Provided "${loading}" should be one of ${VALID_LOADING_VALUES.map(String).join(',')}.`
+        `Image with src "${src}" has invalid "loading" property. Provided "${loading}" should be one of ${VALID_LOADING_VALUES.map(String).join(',')}.`,
       );
     }
     if (priority && loading === 'lazy') {
       throw new Error(
-        `Image with src "${src}" has both "priority" and "loading='lazy'" properties. Only one should be used.`
+        `Image with src "${src}" has both "priority" and "loading='lazy'" properties. Only one should be used.`,
       );
     }
     if (
@@ -354,28 +326,24 @@ export function getImgProps(
       !placeholder.startsWith('data:image/')
     ) {
       throw new Error(
-        `Image with src "${src}" has invalid "placeholder" property "${placeholder}".`
+        `Image with src "${src}" has invalid "placeholder" property "${placeholder}".`,
       );
     }
     if (placeholder !== 'empty') {
       if (widthInt && heightInt && widthInt * heightInt < 1600) {
         warnOnce(
-          `Image with src "${src}" is smaller than 40x40. Consider removing the "placeholder" property to improve performance.`
+          `Image with src "${src}" is smaller than 40x40. Consider removing the "placeholder" property to improve performance.`,
         );
       }
     }
-    if (
-      qualityInt &&
-      config.qualities &&
-      !config.qualities.includes(qualityInt)
-    ) {
+    if (qualityInt && config.qualities && !config.qualities.includes(qualityInt)) {
       warnOnce(
-        `Image with src "${src}" is using quality "${qualityInt}" which is not configured in qualities [${config.qualities.join(', ')}]. Please update your config to [${[...config.qualities, qualityInt].sort().join(', ')}].`
+        `Image with src "${src}" is using quality "${qualityInt}" which is not configured in qualities [${config.qualities.join(', ')}]. Please update your config to [${[...config.qualities, qualityInt].sort().join(', ')}].`,
       );
     }
     if (placeholder === 'blur' && !blurDataURL) {
       throw new Error(
-        `Image with src "${src}" has "placeholder='blur'" property but is missing the "blurDataURL" property.\nPossible solutions:\n  - Add a "blurDataURL" property\n  - Remove the "placeholder" property`
+        `Image with src "${src}" has "placeholder='blur'" property but is missing the "blurDataURL" property.\nPossible solutions:\n  - Add a "blurDataURL" property\n  - Remove the "placeholder" property`,
       );
     }
     if (!unoptimized && !isDefaultLoader) {
@@ -388,21 +356,21 @@ export function getImgProps(
       let url: URL | undefined;
       try {
         url = new URL(urlStr);
-      } catch (err) { }
+      } catch (err) {}
       if (urlStr === src || (url && url.pathname === src && !url.search)) {
         warnOnce(
-          `Image with src "${src}" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.`
+          `Image with src "${src}" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.`,
         );
       }
     }
     if ('ref' in imgRest) {
       warnOnce(
-        `Image with src "${src}" is using unsupported "ref" property. Consider using the "onLoad" property instead.`
+        `Image with src "${src}" is using unsupported "ref" property. Consider using the "onLoad" property instead.`,
       );
     }
     if (onLoadingComplete) {
       warnOnce(
-        `Image with src "${src}" is using deprecated "onLoadingComplete" property. Please use the "onLoad" property instead.`
+        `Image with src "${src}" is using deprecated "onLoadingComplete" property. Please use the "onLoad" property instead.`,
       );
     }
     for (const [legacyKey, legacyValue] of Object.entries({
@@ -414,17 +382,13 @@ export function getImgProps(
     })) {
       if (legacyValue) {
         warnOnce(
-          `Image with src "${src}" has legacy prop "${legacyKey}". Did you forget to run the codemod?`
+          `Image with src "${src}" has legacy prop "${legacyKey}". Did you forget to run the codemod?`,
         );
       }
     }
 
     // LCP detection
-    if (
-      typeof window !== 'undefined' &&
-      !perfObserver &&
-      window.PerformanceObserver
-    ) {
+    if (typeof window !== 'undefined' && !perfObserver && window.PerformanceObserver) {
       perfObserver = new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
           // @ts-ignore - missing "LargestContentfulPaint" class with "element" prop
@@ -438,7 +402,7 @@ export function getImgProps(
             !lcpImage.src.startsWith('blob:')
           ) {
             warnOnce(
-              `Image with src "${lcpImage.src}" was detected as the Largest Contentful Paint (LCP). Please add the \`loading="eager"\` property if this image is above the fold.`
+              `Image with src "${lcpImage.src}" was detected as the Largest Contentful Paint (LCP). Please add the \`loading="eager"\` property if this image is above the fold.`,
             );
           }
         }
@@ -457,19 +421,19 @@ export function getImgProps(
   const imgStyle = Object.assign(
     fill
       ? {
-        position: 'absolute' as const,
-        height: '100%',
-        width: '100%',
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        objectFit,
-        objectPosition,
-      }
+          position: 'absolute' as const,
+          height: '100%',
+          width: '100%',
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          objectFit,
+          objectPosition,
+        }
       : {},
     showAltText ? {} : { color: 'transparent' },
-    style
+    style,
   );
 
   let backgroundImage: string | null = null;
@@ -501,11 +465,11 @@ export function getImgProps(
 
   const placeholderStyle: PlaceholderStyle = backgroundImage
     ? {
-      backgroundSize,
-      backgroundPosition: imgStyle.objectPosition || '50% 50%',
-      backgroundRepeat: 'no-repeat',
-      backgroundImage,
-    }
+        backgroundSize,
+        backgroundPosition: imgStyle.objectPosition || '50% 50%',
+        backgroundRepeat: 'no-repeat',
+        backgroundImage,
+      }
     : {};
 
   const imgAttributes = generateImgAttrs({

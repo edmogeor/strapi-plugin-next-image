@@ -1,14 +1,25 @@
 {
-    "name": "strapi-image",
-    "private": true,
-    "workspaces": [
-        "packages/*"
-    ],
-    "scripts": {
-        "dev": "./scripts/dev.sh",
-        "release": "./scripts/release.sh"
-    },
-    "devDependencies": {
-        "jsdom": "^28.1.0"
-    }
+  "name": "strapi-image",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "./scripts/dev.sh",
+    "release": "./scripts/release.sh",
+    "prepare": "husky",
+    "fallow:check": "fallow",
+    "fallow:fix": "fallow fix --yes"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,tsx,jsx,json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "jsdom": "^28.1.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1"
+  }
 }

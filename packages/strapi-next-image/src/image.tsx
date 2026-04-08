@@ -5,26 +5,13 @@
  */
 'use client';
 
-import React, {
-  useRef,
-  useEffect,
-  useCallback,
-  useState,
-  useMemo,
-  forwardRef,
-  cache,
-} from 'react';
+import React, { useRef, useEffect, useCallback, useState, useMemo, forwardRef, cache } from 'react';
 import ReactDOM from 'react-dom';
 import { getImgProps } from './get-img-props';
-import type {
-  ImageProps,
-  ImgProps,
-  PlaceholderValue,
-  OnLoad,
-  OnLoadingComplete,
-} from './types';
+import type { ImageProps, ImgProps, PlaceholderValue, OnLoad, OnLoadingComplete } from './types';
 import { imageConfigDefault } from './image-config';
 import defaultLoader from './image-loader';
+import { warnOnce } from './warn-once';
 
 // Escapes </script> sequences so the JSON is safe to embed inside a <script> tag.
 function safeJsonForScript(data: unknown): string {
@@ -49,19 +36,6 @@ type ImageElementProps = ImgProps & {
   sizesInput: string | undefined;
 };
 
-let warnedSet: Set<string> | undefined;
-function warnOnce(msg: string): void {
-  if (typeof console !== 'undefined') {
-    if (!warnedSet) warnedSet = new Set();
-    if (!warnedSet.has(msg)) {
-      warnedSet.add(msg);
-      console.warn(msg);
-    }
-  }
-}
-
-
-
 // See https://stackoverflow.com/q/39777833/266535 for why we use this ref
 // handler instead of the img's onLoad attribute.
 function handleLoading(
@@ -79,7 +53,7 @@ function handleLoading(
   }
   img['data-loaded-src'] = src;
   const p = 'decode' in img ? img.decode() : Promise.resolve();
-  p.catch(() => { }).then(() => {
+  p.catch(() => {}).then(() => {
     if (!img.parentElement || !img.isConnected) {
       // Exit early in case of race condition:
       // - onload() is called
@@ -106,7 +80,7 @@ function handleLoading(
         target: img,
         isDefaultPrevented: () => prevented,
         isPropagationStopped: () => stopped,
-        persist: () => { },
+        persist: () => {},
         preventDefault: () => {
           prevented = true;
           event.preventDefault();
@@ -124,16 +98,15 @@ function handleLoading(
       const origSrc = new URL(src, 'http://n').searchParams.get('url') || src;
       if (img.getAttribute('data-nimg') === 'fill') {
         if (!unoptimized && (!sizesInput || sizesInput === '100vw')) {
-          const widthViewportRatio =
-            img.getBoundingClientRect().width / window.innerWidth;
+          const widthViewportRatio = img.getBoundingClientRect().width / window.innerWidth;
           if (widthViewportRatio < 0.6) {
             if (sizesInput === '100vw') {
               warnOnce(
-                `Image with src "${origSrc}" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance.`
+                `Image with src "${origSrc}" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance.`,
               );
             } else {
               warnOnce(
-                `Image with src "${origSrc}" has "fill" but is missing "sizes" prop. Please add it to improve page performance.`
+                `Image with src "${origSrc}" has "fill" but is missing "sizes" prop. Please add it to improve page performance.`,
               );
             }
           }
@@ -145,23 +118,22 @@ function handleLoading(
             warnOnce(
               `Image with src "${origSrc}" has "fill" and parent element with invalid "position". Provided "${position}" should be one of ${valid
                 .map(String)
-                .join(',')}.`
+                .join(',')}.`,
             );
           }
         }
         if (img.height === 0) {
           warnOnce(
-            `Image with src "${origSrc}" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.`
+            `Image with src "${origSrc}" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.`,
           );
         }
       }
 
-      const heightModified =
-        img.height.toString() !== img.getAttribute('height');
+      const heightModified = img.height.toString() !== img.getAttribute('height');
       const widthModified = img.width.toString() !== img.getAttribute('width');
       if (heightModified !== widthModified) {
         warnOnce(
-          `Image with src "${origSrc}" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.`
+          `Image with src "${origSrc}" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.`,
         );
       }
     }
@@ -193,7 +165,7 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
       onError,
       ...rest
     },
-    forwardedRef
+    forwardedRef,
   ) => {
     const ownRef = useCallback(
       (img: ImgElementWithDataProp | null) => {
@@ -213,7 +185,7 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
           }
           if (img.getAttribute('alt') === null) {
             console.error(
-              `Image is missing required "alt" property. Please add Alternative Text to describe the image for screen readers and search engines.`
+              `Image is missing required "alt" property. Please add Alternative Text to describe the image for screen readers and search engines.`,
             );
           }
         }
@@ -238,7 +210,7 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
         onError,
         unoptimized,
         sizesInput,
-      ]
+      ],
     );
 
     const ref = useCallback(
@@ -250,7 +222,7 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
           (forwardedRef as React.MutableRefObject<HTMLImageElement | null>).current = node;
         }
       },
-      [ownRef, forwardedRef]
+      [ownRef, forwardedRef],
     );
 
     return (
@@ -307,7 +279,7 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
         }}
       />
     );
-  }
+  },
 );
 ImageElement.displayName = 'ImageElement';
 
@@ -328,84 +300,82 @@ function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
  *
  * Usage: `import Image from 'strapi-next-image'`
  */
-export const Image = forwardRef<HTMLImageElement | null, ImageProps>(
-  (props, forwardedRef) => {
-    // Memoised with [] so the config is captured once on first render.
-    // path is set synchronously by initializeStrapiImage before the first render,
-    // so this is safe — and prevents re-renders when the async config fetch completes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const { config, injectConfigScript } = useMemo(() => {
-      const c = imageConfigDefault;
-      const scriptState = getConfigScriptState();
-      const injectConfigScript = !scriptState.injected;
-      scriptState.injected = true;
-      return {
-        config: {
-          ...c,
-          allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
-          deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
-          qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
-        },
-        injectConfigScript,
-      };
-    }, []);
+export const Image = forwardRef<HTMLImageElement | null, ImageProps>((props, forwardedRef) => {
+  // Memoised with [] so the config is captured once on first render.
+  // path is set synchronously by initializeStrapiImage before the first render,
+  // so this is safe — and prevents re-renders when the async config fetch completes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const { config, injectConfigScript } = useMemo(() => {
+    const c = imageConfigDefault;
+    const scriptState = getConfigScriptState();
+    const injectConfigScript = !scriptState.injected;
+    scriptState.injected = true;
+    return {
+      config: {
+        ...c,
+        allSizes: [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b),
+        deviceSizes: [...c.deviceSizes].sort((a, b) => a - b),
+        qualities: c.qualities ? [...c.qualities].sort((a, b) => a - b) : undefined,
+      },
+      injectConfigScript,
+    };
+  }, []);
 
-    const { onLoad, onLoadingComplete } = props;
-    const onLoadRef = useRef(onLoad);
-    useEffect(() => {
-      onLoadRef.current = onLoad;
-    }, [onLoad]);
+  const { onLoad, onLoadingComplete } = props;
+  const onLoadRef = useRef(onLoad);
+  useEffect(() => {
+    onLoadRef.current = onLoad;
+  }, [onLoad]);
 
-    const onLoadingCompleteRef = useRef(onLoadingComplete);
-    useEffect(() => {
-      onLoadingCompleteRef.current = onLoadingComplete;
-    }, [onLoadingComplete]);
+  const onLoadingCompleteRef = useRef(onLoadingComplete);
+  useEffect(() => {
+    onLoadingCompleteRef.current = onLoadingComplete;
+  }, [onLoadingComplete]);
 
-    const [blurComplete, setBlurComplete] = useState(false);
-    const [showAltText, setShowAltText] = useState(false);
+  const [blurComplete, setBlurComplete] = useState(false);
+  const [showAltText, setShowAltText] = useState(false);
 
-    const { props: imgAttributes, meta: imgMeta } = getImgProps(props, {
-      defaultLoader,
-      imgConf: config,
-      blurComplete,
-      showAltText,
-    });
+  const { props: imgAttributes, meta: imgMeta } = getImgProps(props, {
+    defaultLoader,
+    imgConf: config,
+    blurComplete,
+    showAltText,
+  });
 
-    return (
-      <>
-        <ImageElement
-          {...imgAttributes}
-          unoptimized={imgMeta.unoptimized}
-          placeholder={imgMeta.placeholder}
-          fill={imgMeta.fill}
-          onLoadRef={onLoadRef}
-          onLoadingCompleteRef={onLoadingCompleteRef}
-          setBlurComplete={setBlurComplete}
-          setShowAltText={setShowAltText}
-          sizesInput={props.sizes}
-          ref={forwardedRef}
-        />
-        {imgMeta.priority ? <ImagePreload imgAttributes={imgAttributes} /> : null}
-        {/* Injected once per render tree (first <Image> only) via React.cache().
+  return (
+    <>
+      <ImageElement
+        {...imgAttributes}
+        unoptimized={imgMeta.unoptimized}
+        placeholder={imgMeta.placeholder}
+        fill={imgMeta.fill}
+        onLoadRef={onLoadRef}
+        onLoadingCompleteRef={onLoadingCompleteRef}
+        setBlurComplete={setBlurComplete}
+        setShowAltText={setShowAltText}
+        sizesInput={props.sizes}
+        ref={forwardedRef}
+      />
+      {imgMeta.priority ? <ImagePreload imgAttributes={imgAttributes} /> : null}
+      {/* Injected once per render tree (first <Image> only) via React.cache().
             Embeds the server-fetched config so the client can apply it synchronously,
             avoiding a CORS round-trip. suppressHydrationWarning covers the edge case
             where initializeStrapiImage is called after hydration. */}
-        {injectConfigScript && (
-          <script
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={{
-              __html: `window.__STRAPI_IMAGE_CONFIG__=${safeJsonForScript({
-                deviceSizes: imageConfigDefault.deviceSizes,
-                imageSizes: imageConfigDefault.imageSizes,
-                qualities: imageConfigDefault.qualities,
-                formats: imageConfigDefault.formats,
-                dangerouslyAllowSVG: imageConfigDefault.dangerouslyAllowSVG,
-              })}`,
-            }}
-          />
-        )}
-      </>
-    );
-  }
-);
+      {injectConfigScript && (
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `window.__STRAPI_IMAGE_CONFIG__=${safeJsonForScript({
+              deviceSizes: imageConfigDefault.deviceSizes,
+              imageSizes: imageConfigDefault.imageSizes,
+              qualities: imageConfigDefault.qualities,
+              formats: imageConfigDefault.formats,
+              dangerouslyAllowSVG: imageConfigDefault.dangerouslyAllowSVG,
+            })}`,
+          }}
+        />
+      )}
+    </>
+  );
+});
 Image.displayName = 'Image';

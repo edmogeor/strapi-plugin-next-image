@@ -53,10 +53,10 @@
   },
   "devDependencies": {
     "@strapi/sdk-plugin": "^5.0.0",
-    "@strapi/strapi": "^5.0.0",
+    "vitest": "^4.0.18",
     "@strapi/types": "^5.0.0",
+    "@vitest/coverage-v8": "^4.1.3",
     "sharp": "^0.34.0",
-    "typescript": "^5.0.0",
-    "vitest": "^4.0.18"
+    "typescript": "^5.0.0"
   }
 }

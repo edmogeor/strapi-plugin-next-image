@@ -1,7 +1,8 @@
-import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Core } from '@strapi/types';
+import type { CacheService } from '../types';
+import { isAnimated } from '../image-utils';
 
 export interface OptimizeParams {
   url: string;
@@ -19,63 +20,8 @@ export interface OptimizeResult {
   filename: string;
 }
 
-function getService(strapi: Core.Strapi, name: string) {
-  return strapi.plugin('next-image').service(name);
-}
-
-/**
- * Detect if an image is animated (GIF, animated WebP/PNG).
- * For GIF, check for multiple image blocks.
- * For WebP, check for ANIM chunk.
- * For PNG, check for acTL chunk (APNG).
- */
-function isAnimated(buffer: Buffer, contentType: string): boolean {
-  if (contentType === 'image/gif') {
-    // GIF: look for multiple image descriptors (0x2C)
-    let count = 0;
-    for (let i = 0; i < buffer.length - 1; i++) {
-      if (buffer[i] === 0x2c) {
-        count++;
-        if (count > 1) return true;
-      }
-    }
-    return false;
-  }
-
-  if (contentType === 'image/webp') {
-    // WebP: look for ANIM or ANMF chunk
-    const str = buffer.toString('ascii', 0, Math.min(buffer.length, 40));
-    if (str.includes('ANIM') || str.includes('ANMF')) return true;
-    // Also scan further in the buffer
-    for (let i = 0; i < Math.min(buffer.length - 4, 1000); i++) {
-      if (
-        buffer[i] === 0x41 && // A
-        buffer[i + 1] === 0x4e && // N
-        buffer[i + 2] === 0x4d && // M
-        (buffer[i + 3] === 0x46 || buffer[i + 3] === 0x00) // F or null
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  if (contentType === 'image/png') {
-    // APNG: look for acTL chunk
-    for (let i = 0; i < Math.min(buffer.length - 4, 2000); i++) {
-      if (
-        buffer[i] === 0x61 && // a
-        buffer[i + 1] === 0x63 && // c
-        buffer[i + 2] === 0x54 && // T
-        buffer[i + 3] === 0x4c // L
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  return false;
+function getCacheService(strapi: Core.Strapi): CacheService {
+  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
 }
 
 function getContentTypeFromExt(ext: string): string {
@@ -124,7 +70,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async optimize(params: OptimizeParams): Promise<OptimizeResult> {
     const { url, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } = params;
 
-    const cacheService = getService(strapi, 'cache');
+    const cacheService = getCacheService(strapi);
 
     // Determine the effective output format string for cache key
     const formatKey = outputFormat || 'original';
@@ -179,7 +125,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async _optimizeAndCache(params: OptimizeParams): Promise<OptimizeResult> {
     const { url, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } = params;
 
-    const cacheService = getService(strapi, 'cache');
+    const cacheService = getCacheService(strapi);
     const formatKey = outputFormat || 'original';
 
     // --- Read original image from uploads directory ---
@@ -204,8 +150,13 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       if (!dangerouslyAllowSVG) {
         // Serve SVG as-is
         const { etag } = await cacheService.set(
-          url, width, quality, formatKey,
-          originalBuffer, 'svg', minimumCacheTTL
+          url,
+          width,
+          quality,
+          formatKey,
+          originalBuffer,
+          'svg',
+          minimumCacheTTL,
         );
         return {
           buffer: originalBuffer,
@@ -221,8 +172,13 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       // Serve animated images as-is
       const extension = getExtFromMime(originalContentType);
       const { etag } = await cacheService.set(
-        url, width, quality, formatKey,
-        originalBuffer, extension, minimumCacheTTL
+        url,
+        width,
+        quality,
+        formatKey,
+        originalBuffer,
+        extension,
+        minimumCacheTTL,
       );
       return {
         buffer: originalBuffer,
@@ -238,7 +194,9 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       const sharpModule = require('sharp');
       sharpFn = sharpModule.default || sharpModule;
     } catch {
-      const err = new Error('sharp is required for image optimization') as Error & { status: number };
+      const err = new Error('sharp is required for image optimization') as Error & {
+        status: number;
+      };
       err.status = 500;
       throw err;
     }
@@ -279,8 +237,13 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
     // --- Write to cache ---
     const { etag } = await cacheService.set(
-      url, width, quality, formatKey,
-      optimizedBuffer, finalExtension, minimumCacheTTL
+      url,
+      width,
+      quality,
+      formatKey,
+      optimizedBuffer,
+      finalExtension,
+      minimumCacheTTL,
     );
 
     return {

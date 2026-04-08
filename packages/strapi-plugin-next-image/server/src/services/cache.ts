@@ -3,6 +3,7 @@ import * as fsp from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
+// fallow-ignore-next-line unused-type
 export interface CacheEntry {
   buffer: Buffer;
   contentType: string;
@@ -85,12 +86,12 @@ function parseCacheFilename(filename: string): CacheMetadata | null {
   };
 }
 
-export interface InvalidateConfig {
-  deviceSizes: number[];
-  imageSizes: number[];
-  qualities: number[];
-  formats: string[];
-}
+import type { PluginConfig } from '../types';
+
+export type InvalidateConfig = Pick<
+  PluginConfig,
+  'deviceSizes' | 'imageSizes' | 'qualities' | 'formats'
+>;
 
 export default () => {
   const memCache = new LRUCache<string, CacheEntry>(200);
@@ -104,10 +105,7 @@ export default () => {
       const diskExists = fs.existsSync(cacheDir);
 
       const allWidths = [...config.deviceSizes, ...config.imageSizes];
-      const formatKeys = [
-        ...config.formats.map((f) => f.replace('image/', '')),
-        'original',
-      ];
+      const formatKeys = [...config.formats.map((f) => f.replace('image/', '')), 'original'];
 
       for (const width of allWidths) {
         for (const quality of config.qualities) {
@@ -131,7 +129,7 @@ export default () => {
       url: string,
       width: number,
       quality: number,
-      format: string
+      format: string,
     ): Promise<{ etag: string; isStale: boolean } | null> {
       const key = getCacheKey(url, width, quality, format);
 
@@ -161,7 +159,7 @@ export default () => {
       url: string,
       width: number,
       quality: number,
-      format: string
+      format: string,
     ): Promise<CacheEntry | null> {
       const key = getCacheKey(url, width, quality, format);
 
@@ -213,7 +211,7 @@ export default () => {
       format: string,
       buffer: Buffer,
       extension: string,
-      maxAge: number
+      maxAge: number,
     ): Promise<{ etag: string }> {
       const key = getCacheKey(url, width, quality, format);
       const entryDir = path.join(getCacheDir(), key);

@@ -1,8 +1,13 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import createCacheService from '../services/cache';
 import type { InvalidateConfig } from '../services/cache';
+
+// Give this test file its own isolated cache directory so it doesn't
+// interfere with cache.test.ts when both run in parallel workers.
+vi.spyOn(process, 'cwd').mockReturnValue(path.join(os.tmpdir(), 'sni-cache-invalidation-test'));
 
 const cacheService = createCacheService();
 const cacheDir = cacheService.getCacheDir();

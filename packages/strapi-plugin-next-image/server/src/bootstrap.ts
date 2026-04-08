@@ -1,30 +1,47 @@
 import type { Core } from '@strapi/types';
 import type { InvalidateConfig } from './services/cache';
+import {
+  getUploadFileRepository,
+  type PluginConfig,
+  type CacheService,
+  type BlurPlaceholderService,
+} from './types';
 
-function getService(strapi: Core.Strapi, name: string) {
-  return strapi.plugin('next-image').service(name);
+function getCacheService(strapi: Core.Strapi): CacheService {
+  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
+}
+
+function getBlurService(strapi: Core.Strapi): BlurPlaceholderService {
+  return strapi
+    .plugin('next-image')
+    .service('blur-placeholder') as unknown as BlurPlaceholderService;
 }
 
 function invalidateCacheForUrl(strapi: Core.Strapi, url: string) {
   try {
     const config = strapi.config.get('plugin::next-image') as InvalidateConfig;
-    const cacheService = getService(strapi, 'cache');
+    const cacheService = getCacheService(strapi);
     cacheService.invalidateUrl(url, config);
     // Also clear the blur service's in-memory confirmation so the next
     // request re-checks the DB after the file has been replaced/deleted.
-    const blurService = getService(strapi, 'blur-placeholder');
+    const blurService = getBlurService(strapi);
     blurService.invalidateUrl(url);
   } catch (err) {
     strapi.log.error(`Failed to invalidate cache for ${url}:`, err);
   }
 }
 
-async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl: string, mime: string) {
+async function generateAndSaveBlur(
+  strapi: Core.Strapi,
+  fileId: number,
+  fileUrl: string,
+  mime: string,
+) {
   try {
-    const blurService = getService(strapi, 'blur-placeholder');
+    const blurService = getBlurService(strapi);
     const blurDataURL = await blurService.generate(fileUrl, mime);
     if (blurDataURL) {
-      await strapi.db.query('plugin::upload.file').update({
+      await getUploadFileRepository(strapi).update({
         where: { id: fileId },
         data: { blurDataURL },
       });
@@ -35,7 +52,7 @@ async function generateAndSaveBlur(strapi: Core.Strapi, fileId: number, fileUrl:
 }
 
 async function backfillMissingBlurs(strapi: Core.Strapi): Promise<void> {
-  const files = await (strapi.db.query('plugin::upload.file') as any).findMany({
+  const files = await getUploadFileRepository(strapi).findMany({
     where: { blurDataURL: { $null: true }, mime: { $startsWith: 'image/' } },
     select: ['id', 'url', 'mime'],
   });
@@ -59,7 +76,7 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
   const existingConfig = await pluginStore.get({ key: 'settings' });
 
   if (!existingConfig) {
-    const defaultConfig = strapi.config.get('plugin::next-image') as Record<string, unknown>;
+    const defaultConfig = strapi.config.get('plugin::next-image') as PluginConfig;
     await pluginStore.set({
       key: 'settings',
       value: defaultConfig,
@@ -67,15 +84,15 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
   }
 
   // If blurSize changed, clear all stored blur placeholders so they get regenerated.
-  const pluginConfig = strapi.config.get('plugin::next-image') as { blurSize?: number };
+  const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
   const currentBlurSize = pluginConfig.blurSize ?? 8;
   const storedBlurSize = (await pluginStore.get({ key: 'blurSize' })) as number | null;
 
   if (storedBlurSize !== null && storedBlurSize !== currentBlurSize) {
     strapi.log.info(
-      `[next-image] blurSize changed (${storedBlurSize} → ${currentBlurSize}), clearing all blur placeholders for regeneration`
+      `[next-image] blurSize changed (${storedBlurSize} → ${currentBlurSize}), clearing all blur placeholders for regeneration`,
     );
-    await (strapi.db.query('plugin::upload.file') as any).updateMany({
+    await getUploadFileRepository(strapi).updateMany({
       where: { blurDataURL: { $null: false } },
       data: { blurDataURL: null },
     });
@@ -96,7 +113,7 @@ export default async ({ strapi }: { strapi: Core.Strapi }) => {
       // (event.params.data.url is the *new* value being written, not the old one.)
       const where = event.params?.where;
       if (where) {
-        const current = await (strapi.db.query('plugin::upload.file') as any).findOne({
+        const current = await getUploadFileRepository(strapi).findOne({
           where,
           select: ['url'],
         });
