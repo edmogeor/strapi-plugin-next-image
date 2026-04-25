@@ -304,7 +304,6 @@ export const Image = forwardRef<HTMLImageElement | null, ImageProps>((props, for
   // Memoised with [] so the config is captured once on first render.
   // path is set synchronously by initializeStrapiImage before the first render,
   // so this is safe — and prevents re-renders when the async config fetch completes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const { config, injectConfigScript } = useMemo(() => {
     const c = imageConfigDefault;
     const scriptState = getConfigScriptState();

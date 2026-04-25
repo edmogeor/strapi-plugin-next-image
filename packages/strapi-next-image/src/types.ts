@@ -60,13 +60,12 @@ export type ImageLoaderProps = {
 export type ImageLoader = (props: ImageLoaderProps) => string;
 
 export type ImageLoaderWithConfig = (
-  props: ImageLoaderProps & { config: Readonly<ImageConfig> }
+  props: ImageLoaderProps & { config: Readonly<ImageConfig> },
 ) => string;
 
 // --- Component Prop Types ---
 
-const VALID_LOADING_VALUES = ['lazy', 'eager', undefined] as const;
-export type LoadingValue = (typeof VALID_LOADING_VALUES)[number];
+export type LoadingValue = 'lazy' | 'eager' | undefined;
 
 export type PlaceholderValue = 'blur' | 'empty' | `data:image/${string}`;
 export type OnLoad = React.ReactEventHandler<HTMLImageElement>;

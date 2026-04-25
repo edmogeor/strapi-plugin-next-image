@@ -211,8 +211,6 @@ export function getImgProps(
   let src: string;
   let widthInt = getInt(width);
   let heightInt = getInt(height);
-  let blurWidth: number | undefined;
-  let blurHeight: number | undefined;
   let alt: string;
 
   if (isStrapiMedia(srcProp)) {
@@ -257,11 +255,13 @@ export function getImgProps(
     if (!src) {
       unoptimized = true;
     } else {
+      // eslint-disable-next-line no-control-regex
       if (/^[\x00-\x20]/.test(src)) {
         throw new Error(
           `Image with src "${src}" cannot start with a space or control character. The href property must be a valid URL.`,
         );
       }
+      // eslint-disable-next-line no-control-regex
       if (/[\x00-\x20]$/.test(src)) {
         throw new Error(
           `Image with src "${src}" cannot end with a space or control character. The href property must be a valid URL.`,
@@ -356,7 +356,7 @@ export function getImgProps(
       let url: URL | undefined;
       try {
         url = new URL(urlStr);
-      } catch (err) {}
+      } catch {}
       if (urlStr === src || (url && url.pathname === src && !url.search)) {
         warnOnce(
           `Image with src "${src}" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.`,
@@ -442,8 +442,6 @@ export function getImgProps(
       const blurSvg = getImageBlurSvg({
         widthInt,
         heightInt,
-        blurWidth,
-        blurHeight,
         blurDataURL: blurDataURL || '',
         objectFit: imgStyle.objectFit,
       });
@@ -489,7 +487,7 @@ export function getImgProps(
       let fullUrl: URL;
       try {
         fullUrl = new URL(imgAttributes.src);
-      } catch (e) {
+      } catch {
         fullUrl = new URL(imgAttributes.src, window.location.href);
       }
       allImgs.set(fullUrl.href, { src, loading: loadingFinal, placeholder });

@@ -40,10 +40,6 @@ function makeMockCtx(
   } as unknown as Context;
 }
 
-function getResponseHeader(ctx: Context, name: string): string | undefined {
-  return (ctx as unknown as { _headers: Record<string, string> })._headers[name.toLowerCase()];
-}
-
 function stubStrapi(configOverrides: Partial<PluginConfig> = {}) {
   const cacheService = {
     peekEtag: vi.fn().mockResolvedValue(null),

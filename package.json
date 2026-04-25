@@ -9,7 +9,9 @@
     "release": "./scripts/release.sh",
     "prepare": "husky",
     "fallow:check": "fallow",
-    "fallow:fix": "fallow fix --yes"
+    "fallow:fix": "fallow fix --yes",
+    "lint": "eslint packages/",
+    "lint:fix": "eslint packages/ --fix"
   },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,json,md,yml,yaml}": [
@@ -17,7 +19,14 @@
     ]
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.5.0",
     "husky": "^9.1.7",
+    "jiti": "^2.6.1",
     "jsdom": "^29.0.2",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",

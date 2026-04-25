@@ -68,7 +68,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
    * while a background re-optimization refreshes the cache for the next request.
    */
   async optimize(params: OptimizeParams): Promise<OptimizeResult> {
-    const { url, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } = params;
+    const { url, width, quality, outputFormat } = params;
 
     const cacheService = getCacheService(strapi);
 

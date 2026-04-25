@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { getImgProps } from '../get-img-props';
 import { imageConfigDefault } from '../image-config';
 import defaultLoader from '../image-loader';

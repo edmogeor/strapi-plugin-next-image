@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { getImageProps } from '../get-image-props';
 
 // Helper to build expected Strapi optimize URL
