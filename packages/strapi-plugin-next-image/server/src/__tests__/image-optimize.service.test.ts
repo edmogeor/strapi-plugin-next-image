@@ -15,6 +15,7 @@ vi.mock('fs/promises', async (importOriginal) => {
   return { ...actual, access: mockAccess, readFile: mockReadFile };
 });
 
+import { JPEG_1x1, PNG_1x1, ANIMATED_GIF, createImageFixtures } from './image-fixtures';
 import createImageOptimizeService from '../services/image-optimize';
 import type { OptimizeParams } from '../services/image-optimize';
 
@@ -22,24 +23,7 @@ import type { OptimizeParams } from '../services/image-optimize';
 // Shared test fixtures — real image buffers so the real sharp can process them
 // ---------------------------------------------------------------------------
 
-let JPEG_1x1: Buffer;
-let PNG_1x1: Buffer;
-let ANIMATED_GIF: Buffer;
-
-beforeAll(async () => {
-  const sharpModule = require('sharp');
-  const sharp = sharpModule.default || sharpModule;
-  const base = sharp({
-    create: { width: 1, height: 1, channels: 3, background: { r: 128, g: 128, b: 128 } },
-  });
-  JPEG_1x1 = await base.clone().jpeg({ quality: 80 }).toBuffer();
-  PNG_1x1 = await base.clone().png().toBuffer();
-
-  // Animated GIF: buffer with two 0x2c (image descriptor) bytes
-  ANIMATED_GIF = Buffer.alloc(100, 0x00);
-  ANIMATED_GIF[10] = 0x2c;
-  ANIMATED_GIF[20] = 0x2c;
-});
+beforeAll(createImageFixtures);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -75,6 +59,21 @@ const baseParams: OptimizeParams = {
   minimumCacheTTL: 3600,
   dangerouslyAllowSVG: false,
 };
+
+function assertCached(
+  cacheService: ReturnType<typeof makeMockCacheService>,
+  args: { format?: string; buffer?: Buffer; extension: string },
+): void {
+  expect(cacheService.set).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.any(Number),
+    expect.any(Number),
+    args.format ?? expect.any(String),
+    args.buffer ?? expect.any(Buffer),
+    args.extension,
+    expect.any(Number),
+  );
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -115,15 +114,7 @@ describe('imageOptimizeService._optimizeAndCache', () => {
 
     expect(result.contentType).toBe('image/webp');
     expect(result.filename).toMatch(/\.webp$/);
-    expect(cacheService.set).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(Number),
-      expect.any(Number),
-      'image/webp',
-      expect.any(Buffer),
-      'webp',
-      expect.any(Number),
-    );
+    assertCached(cacheService, { format: 'image/webp', extension: 'webp' });
   });
 
   it('converts to AVIF with quality-20 offset when outputFormat is image/avif', async () => {
@@ -184,15 +175,7 @@ describe('imageOptimizeService._optimizeAndCache', () => {
     expect(result.contentType).toBe('image/svg+xml');
     expect(result.buffer).toEqual(svgBuffer);
     expect(result.filename).toMatch(/\.svg$/);
-    expect(cacheService.set).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(Number),
-      expect.any(Number),
-      expect.any(String),
-      svgBuffer,
-      'svg',
-      expect.any(Number),
-    );
+    assertCached(cacheService, { buffer: svgBuffer, extension: 'svg' });
   });
 
   it('serves animated GIFs as-is without resizing', async () => {

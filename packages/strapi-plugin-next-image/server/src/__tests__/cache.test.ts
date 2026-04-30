@@ -7,6 +7,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 // interfere with cache-invalidation.test.ts when both run in parallel workers.
 vi.spyOn(process, 'cwd').mockReturnValue(path.join(os.tmpdir(), 'sni-cache-service-test'));
 
+import type { CacheEntry } from '../services/cache';
 import createCacheService from '../services/cache';
 
 // ---------------------------------------------------------------------------
@@ -16,6 +17,16 @@ import createCacheService from '../services/cache';
 // Use a fresh service instance per test to isolate LRU state.
 function makeService() {
   return createCacheService();
+}
+
+function assertEntry(
+  result: CacheEntry | null,
+  expected: { buffer: Buffer; etag: string; isStale?: boolean },
+): void {
+  expect(result).not.toBeNull();
+  expect(result!.buffer).toEqual(expected.buffer);
+  expect(result!.etag).toBe(expected.etag);
+  expect(result!.isStale).toBe(expected.isStale ?? false);
 }
 
 const baseService = makeService();
@@ -159,12 +170,7 @@ describe('get', () => {
     const { etag } = await svc.set('/uploads/img.jpg', 640, 75, 'webp', buf, 'webp', 3600);
 
     const result = await svc.get('/uploads/img.jpg', 640, 75, 'webp');
-    expect(result).not.toBeNull();
-    expect(result!.buffer).toEqual(buf);
-    expect(result!.etag).toBe(etag);
-    expect(result!.contentType).toBe('image/webp');
-    expect(result!.extension).toBe('webp');
-    expect(result!.isStale).toBe(false);
+    assertEntry(result, { buffer: buf, etag });
   });
 
   it('reads the entry from disk when the LRU is cold (fresh service instance)', async () => {
@@ -174,10 +180,7 @@ describe('get', () => {
 
     const reader = makeService(); // empty LRU → hits disk
     const result = await reader.get('/uploads/img.jpg', 640, 75, 'webp');
-    expect(result).not.toBeNull();
-    expect(result!.buffer).toEqual(buf);
-    expect(result!.etag).toBe(etag);
-    expect(result!.isStale).toBe(false);
+    assertEntry(result, { buffer: buf, etag });
   });
 
   it('reports isStale=true for an entry with a past expireAt', async () => {

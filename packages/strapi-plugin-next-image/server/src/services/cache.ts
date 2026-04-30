@@ -86,6 +86,29 @@ function parseCacheFilename(filename: string): CacheMetadata | null {
   };
 }
 
+interface DiskEntry {
+  entryDir: string;
+  filename: string;
+  meta: CacheMetadata;
+}
+
+async function readDiskEntry(key: string): Promise<DiskEntry | null> {
+  const entryDir = path.join(getCacheDir(), key);
+  let files: string[];
+  try {
+    files = await fsp.readdir(entryDir);
+  } catch {
+    return null;
+  }
+  if (files.length === 0) return null;
+
+  const filename = files[0];
+  const meta = parseCacheFilename(filename);
+  if (!meta) return null;
+
+  return { entryDir, filename, meta };
+}
+
 import type { PluginConfig } from '../types';
 
 export type InvalidateConfig = Pick<
@@ -140,19 +163,10 @@ export default () => {
       }
 
       // Disk: readdir only, no readFile
-      const entryDir = path.join(getCacheDir(), key);
-      let files: string[];
-      try {
-        files = await fsp.readdir(entryDir);
-      } catch {
-        return null;
-      }
-      if (files.length === 0) return null;
+      const disk = await readDiskEntry(key);
+      if (!disk) return null;
 
-      const meta = parseCacheFilename(files[0]);
-      if (!meta) return null;
-
-      return { etag: meta.etag, isStale: Date.now() > meta.expireAt };
+      return { etag: disk.meta.etag, isStale: Date.now() > disk.meta.expireAt };
     },
 
     async get(
@@ -171,29 +185,19 @@ export default () => {
       }
 
       // Disk hit
-      const entryDir = path.join(getCacheDir(), key);
-      let files: string[];
-      try {
-        files = await fsp.readdir(entryDir);
-      } catch {
-        return null;
-      }
-      if (files.length === 0) return null;
+      const disk = await readDiskEntry(key);
+      if (!disk) return null;
 
-      const filename = files[0];
-      const meta = parseCacheFilename(filename);
-      if (!meta) return null;
-
-      const isStale = Date.now() > meta.expireAt;
-      const buffer = await fsp.readFile(path.join(entryDir, filename));
+      const isStale = Date.now() > disk.meta.expireAt;
+      const buffer = await fsp.readFile(path.join(disk.entryDir, disk.filename));
 
       const entry: CacheEntry = {
         buffer,
-        contentType: extToContentType[meta.extension] || 'application/octet-stream',
-        etag: meta.etag,
-        extension: meta.extension,
+        contentType: extToContentType[disk.meta.extension] || 'application/octet-stream',
+        etag: disk.meta.etag,
+        extension: disk.meta.extension,
         isStale,
-        expireAt: meta.expireAt,
+        expireAt: disk.meta.expireAt,
       };
 
       // Only promote non-stale entries to LRU

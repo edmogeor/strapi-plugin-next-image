@@ -26,11 +26,10 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
-    "jiti": "^2.6.1",
+    "react-dom": "^19.0.0",
     "jsdom": "^29.0.2",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.0.0"
   }
 }

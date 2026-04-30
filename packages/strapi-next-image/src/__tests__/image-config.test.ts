@@ -4,6 +4,18 @@ import { initializeStrapiImage, imageConfigDefault } from '../image-config';
 // Store original defaults to reset after each test
 const originalDefaults = { ...imageConfigDefault };
 
+async function assertPathSetOnFetchFailure(consoleMethod: 'warn' | 'error'): Promise<void> {
+  const consoleSpy = vi.spyOn(console, consoleMethod).mockImplementation(() => {});
+
+  await initializeStrapiImage('https://backend.test');
+  await vi.runAllTimersAsync();
+
+  expect(consoleSpy).toHaveBeenCalled();
+  expect(imageConfigDefault.path).toBe('https://backend.test');
+  expect(imageConfigDefault.deviceSizes).toEqual(originalDefaults.deviceSizes);
+  expect(imageConfigDefault.formats).toEqual(originalDefaults.formats);
+}
+
 describe('initializeStrapiImage', () => {
   beforeEach(() => {
     // Reset defaults before each test
@@ -72,33 +84,13 @@ describe('initializeStrapiImage', () => {
       status: 404,
     });
 
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    await initializeStrapiImage('https://backend.test');
-    await vi.runAllTimersAsync();
-
-    expect(consoleSpy).toHaveBeenCalled();
-    // path is set synchronously before the fetch, so images always point to Strapi
-    expect(imageConfigDefault.path).toBe('https://backend.test');
-    // breakpoint config remains at defaults since fetch failed
-    expect(imageConfigDefault.deviceSizes).toEqual(originalDefaults.deviceSizes);
-    expect(imageConfigDefault.formats).toEqual(originalDefaults.formats);
+    await assertPathSetOnFetchFailure('warn');
   });
 
   it('sets path immediately even when network errors occur', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    await initializeStrapiImage('https://backend.test');
-    await vi.runAllTimersAsync();
-
-    expect(consoleSpy).toHaveBeenCalled();
-    // path is set synchronously before the fetch, so images always point to Strapi
-    expect(imageConfigDefault.path).toBe('https://backend.test');
-    // breakpoint config remains at defaults since fetch failed
-    expect(imageConfigDefault.deviceSizes).toEqual(originalDefaults.deviceSizes);
-    expect(imageConfigDefault.formats).toEqual(originalDefaults.formats);
+    await assertPathSetOnFetchFailure('error');
   });
 
   it('sets path synchronously — works even without await', () => {

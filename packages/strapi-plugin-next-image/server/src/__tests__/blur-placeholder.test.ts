@@ -14,26 +14,14 @@ vi.mock('fs/promises', async (importOriginal) => {
   return { ...actual, readFile: mockReadFile };
 });
 
+import { JPEG_1x1, WEBP_1x1, createImageFixtures } from './image-fixtures';
 import createBlurPlaceholderService from '../services/blur-placeholder';
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures — real image buffers so sharp can actually process them
 // ---------------------------------------------------------------------------
 
-let JPEG_1x1: Buffer;
-let WEBP_1x1: Buffer;
-
-beforeAll(async () => {
-  // Use sharp (which is installed) to create minimal valid image buffers.
-  // These are used as mock readFile return values so the real sharp path succeeds.
-  const sharpModule = require('sharp');
-  const sharp = sharpModule.default || sharpModule;
-  const base = sharp({
-    create: { width: 1, height: 1, channels: 3, background: { r: 128, g: 128, b: 128 } },
-  });
-  JPEG_1x1 = await base.clone().jpeg({ quality: 80 }).toBuffer();
-  WEBP_1x1 = await base.clone().webp({ quality: 80 }).toBuffer();
-});
+beforeAll(createImageFixtures);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -50,6 +38,21 @@ function makeStrapi(blurSize = 8) {
     config: { get: vi.fn().mockReturnValue({ blurSize }) },
   } as unknown as Core.Strapi;
   return { mockStrapi, mockRepo };
+}
+
+async function expectBlurGeneratesDataURL(blurSize: number, pattern: RegExp): Promise<void> {
+  const { mockStrapi } = makeStrapi(blurSize);
+  mockReadFile.mockResolvedValue(JPEG_1x1);
+  const svc = createBlurPlaceholderService({ strapi: mockStrapi });
+  const result = await svc.generate('/uploads/photo.jpg', 'image/jpeg');
+  expect(result).toMatch(pattern);
+}
+
+function setupConfirmedBlur() {
+  const { mockStrapi, mockRepo } = makeStrapi();
+  mockRepo.findOne.mockResolvedValue({ id: 1, mime: 'image/jpeg', blurDataURL: 'data:...' });
+  const svc = createBlurPlaceholderService({ strapi: mockStrapi });
+  return { mockStrapi, mockRepo, svc };
 }
 
 // ---------------------------------------------------------------------------
@@ -111,11 +114,7 @@ describe('blurPlaceholderService.generate', () => {
   });
 
   it('returns a data URL for a valid JPEG', async () => {
-    const { mockStrapi } = makeStrapi();
-    mockReadFile.mockResolvedValue(JPEG_1x1);
-    const svc = createBlurPlaceholderService({ strapi: mockStrapi });
-    const result = await svc.generate('/uploads/photo.jpg', 'image/jpeg');
-    expect(result).toMatch(/^data:image\/jpeg;base64,/);
+    await expectBlurGeneratesDataURL(8, /^data:image\/jpeg;base64,/);
   });
 
   it('returns a data URL for a valid WebP', async () => {
@@ -127,12 +126,7 @@ describe('blurPlaceholderService.generate', () => {
   });
 
   it('uses blurSize from plugin config', async () => {
-    const { mockStrapi } = makeStrapi(4);
-    mockReadFile.mockResolvedValue(JPEG_1x1);
-    const svc = createBlurPlaceholderService({ strapi: mockStrapi });
-    // Just verify it doesn't throw and returns a data URL with a custom blurSize
-    const result = await svc.generate('/uploads/photo.jpg', 'image/jpeg');
-    expect(result).toMatch(/^data:image\/jpeg;base64,/);
+    await expectBlurGeneratesDataURL(4, /^data:image\/jpeg;base64,/);
   });
 
   it('returns null and logs an error when sharp processing fails', async () => {
@@ -195,9 +189,7 @@ describe('blurPlaceholderService.generateIfMissing', () => {
   });
 
   it('skips the DB lookup on second call for same URL after blur is confirmed', async () => {
-    const { mockStrapi, mockRepo } = makeStrapi();
-    mockRepo.findOne.mockResolvedValue({ id: 1, mime: 'image/jpeg', blurDataURL: 'data:...' });
-    const svc = createBlurPlaceholderService({ strapi: mockStrapi });
+    const { svc, mockRepo } = setupConfirmedBlur();
 
     await svc.generateIfMissing('/uploads/photo.jpg');
     await svc.generateIfMissing('/uploads/photo.jpg');
@@ -236,9 +228,7 @@ describe('blurPlaceholderService.generateIfMissing', () => {
 
 describe('blurPlaceholderService.invalidateUrl', () => {
   it('forces a DB re-check on the next generateIfMissing call', async () => {
-    const { mockStrapi, mockRepo } = makeStrapi();
-    mockRepo.findOne.mockResolvedValue({ id: 1, mime: 'image/jpeg', blurDataURL: 'data:...' });
-    const svc = createBlurPlaceholderService({ strapi: mockStrapi });
+    const { mockRepo, svc } = setupConfirmedBlur();
 
     await svc.generateIfMissing('/uploads/photo.jpg');
     expect(mockRepo.findOne).toHaveBeenCalledTimes(1);

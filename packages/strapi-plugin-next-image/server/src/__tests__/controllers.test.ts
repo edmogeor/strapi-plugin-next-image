@@ -160,37 +160,35 @@ describe('configController.get', () => {
 // Image optimize controller
 // ---------------------------------------------------------------------------
 
+async function assertValidationError(
+  query: Record<string, string>,
+  expectedErrorPattern: RegExp | string,
+): Promise<void> {
+  const ctx = makeMockCtx(query);
+  await imageOptimizeController.optimize(ctx, async () => {});
+  expect(ctx.status).toBe(400);
+  expect((ctx.body as Record<string, string>).error).toMatch(expectedErrorPattern);
+}
+
 describe('imageOptimizeController.optimize', () => {
   it('returns 400 when url param is missing', async () => {
     stubStrapi();
-    const ctx = makeMockCtx({ w: '640', q: '75' });
-    await imageOptimizeController.optimize(ctx, async () => {});
-    expect(ctx.status).toBe(400);
-    expect((ctx.body as Record<string, string>).error).toMatch(/url/i);
+    await assertValidationError({ w: '640', q: '75' }, /url/i);
   });
 
   it('returns 400 when url does not start with /uploads/', async () => {
     stubStrapi();
-    const ctx = makeMockCtx({ url: '/etc/passwd', w: '640', q: '75' });
-    await imageOptimizeController.optimize(ctx, async () => {});
-    expect(ctx.status).toBe(400);
-    expect((ctx.body as Record<string, string>).error).toMatch(/\/uploads\//);
+    await assertValidationError({ url: '/etc/passwd', w: '640', q: '75' }, /\/uploads\//);
   });
 
   it('returns 400 for a width not in deviceSizes or imageSizes', async () => {
     stubStrapi();
-    const ctx = makeMockCtx({ url: '/uploads/img.jpg', w: '999', q: '75' });
-    await imageOptimizeController.optimize(ctx, async () => {});
-    expect(ctx.status).toBe(400);
-    expect((ctx.body as Record<string, string>).error).toMatch(/"w"/);
+    await assertValidationError({ url: '/uploads/img.jpg', w: '999', q: '75' }, /"w"/);
   });
 
   it('returns 400 for quality below 1', async () => {
     stubStrapi();
-    const ctx = makeMockCtx({ url: '/uploads/img.jpg', w: '640', q: '0' });
-    await imageOptimizeController.optimize(ctx, async () => {});
-    expect(ctx.status).toBe(400);
-    expect((ctx.body as Record<string, string>).error).toMatch(/"q"/);
+    await assertValidationError({ url: '/uploads/img.jpg', w: '640', q: '0' }, /"q"/);
   });
 
   it('returns 400 for quality above 100', async () => {
