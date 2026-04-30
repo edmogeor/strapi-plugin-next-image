@@ -49,6 +49,7 @@ export interface ContentTypeSchema {
 }
 
 /** Strapi internal content types registry (accessed via strapi.get('content-types')). */
+// fallow-ignore-next-line unused-type
 export interface ContentTypesRegistry {
   extend(uid: string, callback: (contentType: ContentTypeSchema) => void): void;
 }
@@ -67,12 +68,15 @@ import type blurPlaceholderServiceFactory from './services/blur-placeholder';
 import type imageOptimizeServiceFactory from './services/image-optimize';
 
 /** Return type of the cache service factory. */
+// fallow-ignore-next-line unused-type
 export type CacheService = ReturnType<typeof cacheServiceFactory>;
 
 /** Return type of the blur-placeholder service factory. */
+// fallow-ignore-next-line unused-type
 export type BlurPlaceholderService = ReturnType<typeof blurPlaceholderServiceFactory>;
 
 /** Return type of the image-optimize service factory. */
+// fallow-ignore-next-line unused-type
 export type ImageOptimizeService = ReturnType<typeof imageOptimizeServiceFactory>;
 
 /**

@@ -111,6 +111,204 @@ function generateImgAttrs({
   };
 }
 
+type ValidationInputs = {
+  src: string;
+  srcProp: ImageProps['src'];
+  widthInt: number | undefined;
+  heightInt: number | undefined;
+  width: ImageProps['width'];
+  height: ImageProps['height'];
+  fill: boolean;
+  style: ImageProps['style'];
+  loading: ImageProps['loading'];
+  priority: boolean;
+  placeholder: PlaceholderValue;
+  blurDataURL: string | undefined;
+  config: ImageConfig;
+  qualityInt: number | undefined;
+  isDefaultLoader: boolean;
+  loader: ImageLoaderWithConfig;
+  imgRest: Record<string, unknown>;
+  unoptimized: boolean;
+};
+
+function validateImgProps(inputs: ValidationInputs): boolean {
+  const {
+    src,
+    srcProp,
+    widthInt,
+    heightInt,
+    width,
+    height,
+    fill,
+    style,
+    loading,
+    priority,
+    placeholder,
+    blurDataURL,
+    config,
+    qualityInt,
+    isDefaultLoader,
+    loader,
+    imgRest,
+    unoptimized,
+  } = inputs;
+
+  if (!src) return true;
+
+  // eslint-disable-next-line no-control-regex
+  if (/^[\x00-\x20]/.test(src)) {
+    throw new Error(
+      `Image with src "${src}" cannot start with a space or control character. The href property must be a valid URL.`,
+    );
+  }
+  // eslint-disable-next-line no-control-regex
+  if (/[\x00-\x20]$/.test(src)) {
+    throw new Error(
+      `Image with src "${src}" cannot end with a space or control character. The href property must be a valid URL.`,
+    );
+  }
+  if (fill) {
+    if (width) {
+      throw new Error(
+        `Image with src "${src}" has both "width" and "fill" properties. Only one should be used.`,
+      );
+    }
+    if (height) {
+      throw new Error(
+        `Image with src "${src}" has both "height" and "fill" properties. Only one should be used.`,
+      );
+    }
+    if (style?.position && style.position !== 'absolute') {
+      throw new Error(
+        `Image with src "${src}" has both "fill" and "style.position" properties. Images with "fill" always use position absolute - it cannot be modified.`,
+      );
+    }
+    if (style?.width && style.width !== '100%') {
+      throw new Error(
+        `Image with src "${src}" has both "fill" and "style.width" properties. Images with "fill" always use width 100% - it cannot be modified.`,
+      );
+    }
+    if (style?.height && style.height !== '100%') {
+      throw new Error(
+        `Image with src "${src}" has both "fill" and "style.height" properties. Images with "fill" always use height 100% - it cannot be modified.`,
+      );
+    }
+  } else if (!isStrapiMedia(srcProp)) {
+    if (typeof widthInt === 'undefined') {
+      throw new Error(`Image with src "${src}" is missing required "width" property.`);
+    } else if (isNaN(widthInt)) {
+      throw new Error(
+        `Image with src "${src}" has invalid "width" property. Expected a numeric value in pixels but received "${width}".`,
+      );
+    }
+    if (typeof heightInt === 'undefined') {
+      throw new Error(`Image with src "${src}" is missing required "height" property.`);
+    } else if (isNaN(heightInt)) {
+      throw new Error(
+        `Image with src "${src}" has invalid "height" property. Expected a numeric value in pixels but received "${height}".`,
+      );
+    }
+  }
+  if (!VALID_LOADING_VALUES.includes(loading)) {
+    throw new Error(
+      `Image with src "${src}" has invalid "loading" property. Provided "${loading}" should be one of ${VALID_LOADING_VALUES.map(String).join(',')}.`,
+    );
+  }
+  if (priority && loading === 'lazy') {
+    throw new Error(
+      `Image with src "${src}" has both "priority" and "loading='lazy'" properties. Only one should be used.`,
+    );
+  }
+  if (placeholder !== 'empty' && placeholder !== 'blur' && !placeholder.startsWith('data:image/')) {
+    throw new Error(`Image with src "${src}" has invalid "placeholder" property "${placeholder}".`);
+  }
+  if (placeholder !== 'empty') {
+    if (widthInt && heightInt && widthInt * heightInt < 1600) {
+      warnOnce(
+        `Image with src "${src}" is smaller than 40x40. Consider removing the "placeholder" property to improve performance.`,
+      );
+    }
+  }
+  if (qualityInt && config.qualities && !config.qualities.includes(qualityInt)) {
+    warnOnce(
+      `Image with src "${src}" is using quality "${qualityInt}" which is not configured in qualities [${config.qualities.join(', ')}]. Please update your config to [${[...config.qualities, qualityInt].sort().join(', ')}].`,
+    );
+  }
+  if (placeholder === 'blur' && !blurDataURL) {
+    throw new Error(
+      `Image with src "${src}" has "placeholder='blur'" property but is missing the "blurDataURL" property.\nPossible solutions:\n  - Add a "blurDataURL" property\n  - Remove the "placeholder" property`,
+    );
+  }
+  if (!unoptimized && !isDefaultLoader) {
+    const urlStr = loader({
+      config,
+      src,
+      width: widthInt || 400,
+      quality: qualityInt || 75,
+    });
+    let url: URL | undefined;
+    try {
+      url = new URL(urlStr);
+    } catch {}
+    if (urlStr === src || (url && url.pathname === src && !url.search)) {
+      warnOnce(
+        `Image with src "${src}" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.`,
+      );
+    }
+  }
+  if ('ref' in imgRest) {
+    warnOnce(
+      `Image with src "${src}" is using unsupported "ref" property. Consider using the "onLoad" property instead.`,
+    );
+  }
+  if ('onLoadingComplete' in imgRest) {
+    warnOnce(
+      `Image with src "${src}" is using removed "onLoadingComplete" property. Use "onLoad" instead.`,
+    );
+  }
+  const removedProps = ['layout', 'objectFit', 'objectPosition', 'lazyBoundary', 'lazyRoot'];
+  for (const key of removedProps) {
+    if (key in imgRest) {
+      warnOnce(
+        `Image with src "${src}" is using removed prop "${key}". This prop is no longer supported.`,
+      );
+    }
+  }
+
+  // LCP detection
+  if (typeof window !== 'undefined' && !perfObserver && window.PerformanceObserver) {
+    perfObserver = new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        // @ts-expect-error — LargestContentfulPaint "element" prop not typed in TS lib
+        const imgSrc = (entry.element as HTMLImageElement | undefined)?.src || '';
+        const lcpImage = allImgs.get(imgSrc);
+        if (
+          lcpImage &&
+          lcpImage.loading === 'lazy' &&
+          lcpImage.placeholder === 'empty' &&
+          !lcpImage.src.startsWith('data:') &&
+          !lcpImage.src.startsWith('blob:')
+        ) {
+          warnOnce(
+            `Image with src "${lcpImage.src}" was detected as the Largest Contentful Paint (LCP). Please add the \`loading="eager"\` property if this image is above the fold.`,
+          );
+        }
+      }
+    });
+    try {
+      perfObserver.observe({
+        type: 'largest-contentful-paint',
+        buffered: true,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  return false;
+}
+
 /**
  * Shared function to compute <img> props from ImageProps.
  * Ported from Next.js get-img-props.ts.
@@ -223,166 +421,28 @@ export function getImgProps(
   const qualityInt = getInt(quality);
 
   if (process.env.NODE_ENV !== 'production') {
-    if (!src) {
+    const emptySrc = validateImgProps({
+      src,
+      srcProp,
+      widthInt,
+      heightInt,
+      width,
+      height,
+      fill,
+      style,
+      loading,
+      priority,
+      placeholder,
+      blurDataURL,
+      config,
+      qualityInt,
+      isDefaultLoader,
+      loader,
+      imgRest,
+      unoptimized,
+    });
+    if (emptySrc) {
       unoptimized = true;
-    } else {
-      // eslint-disable-next-line no-control-regex
-      if (/^[\x00-\x20]/.test(src)) {
-        throw new Error(
-          `Image with src "${src}" cannot start with a space or control character. The href property must be a valid URL.`,
-        );
-      }
-      // eslint-disable-next-line no-control-regex
-      if (/[\x00-\x20]$/.test(src)) {
-        throw new Error(
-          `Image with src "${src}" cannot end with a space or control character. The href property must be a valid URL.`,
-        );
-      }
-      if (fill) {
-        if (width) {
-          throw new Error(
-            `Image with src "${src}" has both "width" and "fill" properties. Only one should be used.`,
-          );
-        }
-        if (height) {
-          throw new Error(
-            `Image with src "${src}" has both "height" and "fill" properties. Only one should be used.`,
-          );
-        }
-        if (style?.position && style.position !== 'absolute') {
-          throw new Error(
-            `Image with src "${src}" has both "fill" and "style.position" properties. Images with "fill" always use position absolute - it cannot be modified.`,
-          );
-        }
-        if (style?.width && style.width !== '100%') {
-          throw new Error(
-            `Image with src "${src}" has both "fill" and "style.width" properties. Images with "fill" always use width 100% - it cannot be modified.`,
-          );
-        }
-        if (style?.height && style.height !== '100%') {
-          throw new Error(
-            `Image with src "${src}" has both "fill" and "style.height" properties. Images with "fill" always use height 100% - it cannot be modified.`,
-          );
-        }
-      } else if (!isStrapiMedia(srcProp)) {
-        if (typeof widthInt === 'undefined') {
-          throw new Error(`Image with src "${src}" is missing required "width" property.`);
-        } else if (isNaN(widthInt)) {
-          throw new Error(
-            `Image with src "${src}" has invalid "width" property. Expected a numeric value in pixels but received "${width}".`,
-          );
-        }
-        if (typeof heightInt === 'undefined') {
-          throw new Error(`Image with src "${src}" is missing required "height" property.`);
-        } else if (isNaN(heightInt)) {
-          throw new Error(
-            `Image with src "${src}" has invalid "height" property. Expected a numeric value in pixels but received "${height}".`,
-          );
-        }
-      }
-    }
-    if (!VALID_LOADING_VALUES.includes(loading)) {
-      throw new Error(
-        `Image with src "${src}" has invalid "loading" property. Provided "${loading}" should be one of ${VALID_LOADING_VALUES.map(String).join(',')}.`,
-      );
-    }
-    if (priority && loading === 'lazy') {
-      throw new Error(
-        `Image with src "${src}" has both "priority" and "loading='lazy'" properties. Only one should be used.`,
-      );
-    }
-    if (
-      placeholder !== 'empty' &&
-      placeholder !== 'blur' &&
-      !placeholder.startsWith('data:image/')
-    ) {
-      throw new Error(
-        `Image with src "${src}" has invalid "placeholder" property "${placeholder}".`,
-      );
-    }
-    if (placeholder !== 'empty') {
-      if (widthInt && heightInt && widthInt * heightInt < 1600) {
-        warnOnce(
-          `Image with src "${src}" is smaller than 40x40. Consider removing the "placeholder" property to improve performance.`,
-        );
-      }
-    }
-    if (qualityInt && config.qualities && !config.qualities.includes(qualityInt)) {
-      warnOnce(
-        `Image with src "${src}" is using quality "${qualityInt}" which is not configured in qualities [${config.qualities.join(', ')}]. Please update your config to [${[...config.qualities, qualityInt].sort().join(', ')}].`,
-      );
-    }
-    if (placeholder === 'blur' && !blurDataURL) {
-      throw new Error(
-        `Image with src "${src}" has "placeholder='blur'" property but is missing the "blurDataURL" property.\nPossible solutions:\n  - Add a "blurDataURL" property\n  - Remove the "placeholder" property`,
-      );
-    }
-    if (!unoptimized && !isDefaultLoader) {
-      const urlStr = loader({
-        config,
-        src,
-        width: widthInt || 400,
-        quality: qualityInt || 75,
-      });
-      let url: URL | undefined;
-      try {
-        url = new URL(urlStr);
-      } catch {}
-      if (urlStr === src || (url && url.pathname === src && !url.search)) {
-        warnOnce(
-          `Image with src "${src}" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.`,
-        );
-      }
-    }
-    if ('ref' in imgRest) {
-      warnOnce(
-        `Image with src "${src}" is using unsupported "ref" property. Consider using the "onLoad" property instead.`,
-      );
-    }
-    if ('onLoadingComplete' in imgRest) {
-      warnOnce(
-        `Image with src "${src}" is using removed "onLoadingComplete" property. Use "onLoad" instead.`,
-      );
-    }
-    if (process.env.NODE_ENV !== 'production') {
-      const removedProps = ['layout', 'objectFit', 'objectPosition', 'lazyBoundary', 'lazyRoot'];
-      for (const key of removedProps) {
-        if (key in imgRest) {
-          warnOnce(
-            `Image with src "${src}" is using removed prop "${key}". This prop is no longer supported.`,
-          );
-        }
-      }
-    }
-
-    // LCP detection
-    if (typeof window !== 'undefined' && !perfObserver && window.PerformanceObserver) {
-      perfObserver = new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-          // @ts-expect-error — LargestContentfulPaint "element" prop not typed in TS lib
-          const imgSrc = (entry.element as HTMLImageElement | undefined)?.src || '';
-          const lcpImage = allImgs.get(imgSrc);
-          if (
-            lcpImage &&
-            lcpImage.loading === 'lazy' &&
-            lcpImage.placeholder === 'empty' &&
-            !lcpImage.src.startsWith('data:') &&
-            !lcpImage.src.startsWith('blob:')
-          ) {
-            warnOnce(
-              `Image with src "${lcpImage.src}" was detected as the Largest Contentful Paint (LCP). Please add the \`loading="eager"\` property if this image is above the fold.`,
-            );
-          }
-        }
-      });
-      try {
-        perfObserver.observe({
-          type: 'largest-contentful-paint',
-          buffered: true,
-        });
-      } catch (err) {
-        console.error(err);
-      }
     }
   }
 

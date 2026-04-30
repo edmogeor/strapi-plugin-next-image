@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { EXT_TO_CONTENT_TYPE } from '../image-utils';
+import { getContentTypeFromExt } from '../image-utils';
 
 // fallow-ignore-next-line unused-type
 export interface CacheEntry {
@@ -184,7 +184,7 @@ export default () => {
 
       const entry: CacheEntry = {
         buffer,
-        contentType: EXT_TO_CONTENT_TYPE[`.${disk.meta.extension}`] || 'application/octet-stream',
+        contentType: getContentTypeFromExt(`.${disk.meta.extension}`),
         etag: disk.meta.etag,
         extension: disk.meta.extension,
         isStale,
@@ -223,7 +223,7 @@ export default () => {
       // Update LRU with fresh entry
       memCache.set(key, {
         buffer,
-        contentType: EXT_TO_CONTENT_TYPE[`.${extension}`] || 'application/octet-stream',
+        contentType: getContentTypeFromExt(`.${extension}`),
         etag,
         extension,
         isStale: false,

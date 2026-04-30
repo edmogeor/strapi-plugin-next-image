@@ -4,7 +4,7 @@
  * Updating the list here updates getContentTypeFromExt, getExtFromMime,
  * and the cache service's extToContentType simultaneously.
  */
-export const EXT_TO_CONTENT_TYPE: Record<string, string> = {
+const EXT_TO_CONTENT_TYPE: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',

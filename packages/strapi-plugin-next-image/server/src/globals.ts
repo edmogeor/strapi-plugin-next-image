@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file
 import type { Core } from '@strapi/types';
 
 declare global {

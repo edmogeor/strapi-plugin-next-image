@@ -1,3 +1,4 @@
+// fallow-ignore-file
 import { readFileSync } from 'fs';
 
 const fields = ['deviceSizes', 'imageSizes', 'qualities', 'formats', 'dangerouslyAllowSVG'];

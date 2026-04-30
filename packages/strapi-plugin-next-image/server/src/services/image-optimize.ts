@@ -13,7 +13,7 @@ export interface OptimizeParams {
   dangerouslyAllowSVG: boolean;
 }
 
-export interface OptimizeResult {
+interface OptimizeResult {
   buffer: Buffer;
   contentType: string;
   etag: string;
@@ -171,32 +171,27 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     });
 
     let finalContentType: string;
-    let finalExtension: string;
 
     if (outputFormat === 'image/avif') {
       // AVIF: quality offset of -20, matching Next.js behavior
       const avifQuality = Math.max(quality - 20, 1);
       pipeline = pipeline.avif({ quality: avifQuality });
       finalContentType = 'image/avif';
-      finalExtension = 'avif';
     } else if (outputFormat === 'image/webp') {
       pipeline = pipeline.webp({ quality });
       finalContentType = 'image/webp';
-      finalExtension = 'webp';
     } else if (originalContentType === 'image/png') {
       pipeline = pipeline.png({ quality });
       finalContentType = 'image/png';
-      finalExtension = 'png';
     } else if (originalContentType === 'image/gif') {
       pipeline = pipeline.gif();
       finalContentType = 'image/gif';
-      finalExtension = 'gif';
     } else {
       // Default to JPEG
       pipeline = pipeline.jpeg({ quality });
       finalContentType = 'image/jpeg';
-      finalExtension = 'jpg';
     }
+    const finalExtension = getExtFromMime(finalContentType);
 
     const optimizedBuffer = await pipeline.toBuffer();
 

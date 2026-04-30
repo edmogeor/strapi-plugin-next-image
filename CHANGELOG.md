@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-04-30
+
+### Added
+
+- **strapi-plugin-next-image** — `globals.ts` module declaring the Strapi v5 runtime global type, eliminating implicit `any` on untyped `strapi.*` accesses.
+- **ci** — Validation step (`scripts/validate-config-sync.mjs`) that ensures client-side image config defaults match the server canonical source.
+- **ci** — ESLint configured for TypeScript; all lint errors resolved across both packages.
+
+### Changed
+
+- **strapi-plugin-next-image** — MIME type ↔ file extension mapping centralized into a single canonical source (`EXT_TO_CONTENT_TYPE` in `image-utils.ts`). Updating it once updates `getContentTypeFromExt`, `getExtFromMime`, and the cache service simultaneously.
+- **strapi-plugin-next-image** — All typed service accessors (`getCacheService`, `getBlurService`, `getOptimizeService`) moved to `types.ts`, centralising the `as unknown as` cast pattern so consumers get typed services without repeating casts.
+- **strapi-plugin-next-image** — Added `getContentTypesRegistry` accessor to `types.ts`, replacing manual `(strapi as …).get('content-types')` casts in `register.ts`.
+- **strapi-plugin-next-image** — Extracted `readDiskEntry` helper in the cache service to eliminate duplicated disk I/O logic across `peekEtag` and `get`.
+- **strapi-plugin-next-image** — Cache service now derives content types from the canonical `getContentTypeFromExt` utility instead of a local hardcoded map.
+- **strapi-plugin-next-image** — Image optimization service now derives file extensions from `getExtFromMime` instead of duplicating extension strings in each format branch.
+- **strapi-next-image** — Extracted `validateImgProps` from `getImgProps`, reducing the function's cognitive complexity by 64% and line count by 37%.
+- **strapi-next-image** — Removed redundant nested `process.env.NODE_ENV` guard inside `getImgProps` validation.
+
+### Removed
+
+- Duplicate `extToContentType` map in the cache service (now uses canonical map).
+- Duplicate `getContentTypeFromExt` and `getExtFromMime` functions in the image optimization service (now imported from `image-utils.ts`).
+- Duplicate `getCacheService` and `getBlurService` helpers in `bootstrap.ts` (now imported from `types.ts`).
+- Duplicate `getCacheService` and `getOptimizeService` helpers in the image optimization controller (now imported from `types.ts`).
+- Unused `export` on `EXT_TO_CONTENT_TYPE` (only used internally) and `OptimizeResult` interface.
+
 ## [0.3.12] - 2026-04-22
 
 ### Changed

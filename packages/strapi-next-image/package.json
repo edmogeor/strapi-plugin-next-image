@@ -1,6 +1,6 @@
 {
   "name": "strapi-next-image",
-  "version": "0.3.12",
+  "version": "1.0.0",
   "description": "A drop-in replacement for next/image that brings Next.js-style image optimization to any React app using Strapi v5.",
   "author": "edmogeor",
   "repository": {
