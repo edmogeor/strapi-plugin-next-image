@@ -2,11 +2,11 @@
   <img src="https://raw.githubusercontent.com/edmogeor/strapi-plugin-next-image/main/assets/logo.png" width="140" alt="strapi-plugin-next-image logo"/>
   <h1>Next.js &lt;Image&gt; for Strapi</h1>
   <p>
-    <a href="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml">
-      <img src="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml/badge.svg" alt="CI"/>
-    </a>
     <a href="https://www.npmjs.com/package/strapi-plugin-next-image">
       <img src="https://img.shields.io/npm/v/strapi-plugin-next-image.svg" alt="npm version"/>
+    </a>
+    <a href="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml">
+      <img src="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml/badge.svg" alt="CI"/>
     </a>
     <a href="https://github.com/fallow-rs/fallow">
       <img src="https://raw.githubusercontent.com/edmogeor/strapi-plugin-next-image/badges/badge.svg" alt="fallow health"/>
