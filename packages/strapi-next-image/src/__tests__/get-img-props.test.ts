@@ -249,15 +249,16 @@ describe('getImgProps() — dev-mode warnings', () => {
     expect(warningMessages.some((m) => m.includes('does not implement width'))).toBe(true);
   });
 
-  it('warns about deprecated onLoadingComplete', () => {
+  it('warns about removed onLoadingComplete', () => {
     call({
       src: '/warn-olc.png',
       alt: '',
       width: 100,
       height: 100,
+      // @ts-expect-error — removed prop, test verifies warning
       onLoadingComplete: () => {},
-    });
-    expect(warningMessages.some((m) => m.includes('deprecated "onLoadingComplete"'))).toBe(true);
+    } as unknown as ImageProps);
+    expect(warningMessages.some((m) => m.includes('removed "onLoadingComplete"'))).toBe(true);
   });
 
   it('warns about ref in rest', () => {
@@ -284,37 +285,40 @@ describe('getImgProps() — dev-mode warnings', () => {
     ).toThrow('missing the "blurDataURL" property');
   });
 
-  it('warns about legacy layout prop', () => {
+  it('warns about removed layout prop', () => {
     call({
       src: '/warn-layout.png',
       alt: '',
       width: 100,
       height: 100,
+      // @ts-expect-error — removed prop, test verifies warning
       layout: 'responsive',
-    });
-    expect(warningMessages.some((m) => m.includes('legacy prop "layout"'))).toBe(true);
+    } as unknown as ImageProps);
+    expect(warningMessages.some((m) => m.includes('removed prop "layout"'))).toBe(true);
   });
 
-  it('warns about legacy objectFit prop', () => {
+  it('warns about removed objectFit prop', () => {
     call({
       src: '/warn-of.png',
       alt: '',
       width: 100,
       height: 100,
+      // @ts-expect-error — removed prop, test verifies warning
       objectFit: 'cover',
-    });
-    expect(warningMessages.some((m) => m.includes('legacy prop "objectFit"'))).toBe(true);
+    } as unknown as ImageProps);
+    expect(warningMessages.some((m) => m.includes('removed prop "objectFit"'))).toBe(true);
   });
 
-  it('warns about legacy objectPosition prop', () => {
+  it('warns about removed objectPosition prop', () => {
     call({
       src: '/warn-op.png',
       alt: '',
       width: 100,
       height: 100,
+      // @ts-expect-error — removed prop, test verifies warning
       objectPosition: 'center',
-    });
-    expect(warningMessages.some((m) => m.includes('legacy prop "objectPosition"'))).toBe(true);
+    } as unknown as ImageProps);
+    expect(warningMessages.some((m) => m.includes('removed prop "objectPosition"'))).toBe(true);
   });
 
   it('warns about small image with placeholder', () => {
@@ -327,44 +331,6 @@ describe('getImgProps() — dev-mode warnings', () => {
       blurDataURL: 'data:image/png;base64,abc',
     });
     expect(warningMessages.some((m) => m.includes('smaller than 40x40'))).toBe(true);
-  });
-});
-
-describe('getImgProps() — legacy layout prop', () => {
-  it('layout=fill sets fill=true and sizes=100vw', () => {
-    const { props, meta } = call({
-      src: '/test.png',
-      alt: '',
-      layout: 'fill',
-    });
-    expect(meta.fill).toBe(true);
-    expect(props.sizes).toBe('100vw');
-    expect(props.style.position).toBe('absolute');
-  });
-
-  it('layout=responsive sets width:100%, height:auto, sizes:100vw', () => {
-    const { props } = call({
-      src: '/test.png',
-      alt: '',
-      width: 100,
-      height: 100,
-      layout: 'responsive',
-    });
-    expect(props.style.width).toBe('100%');
-    expect(props.style.height).toBe('auto');
-    expect(props.sizes).toBe('100vw');
-  });
-
-  it('layout=intrinsic sets maxWidth:100%, height:auto', () => {
-    const { props } = call({
-      src: '/test.png',
-      alt: '',
-      width: 100,
-      height: 100,
-      layout: 'intrinsic',
-    });
-    expect(props.style.maxWidth).toBe('100%');
-    expect(props.style.height).toBe('auto');
   });
 });
 

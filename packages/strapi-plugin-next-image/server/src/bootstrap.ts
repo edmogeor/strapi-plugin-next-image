@@ -2,20 +2,10 @@ import type { Core } from '@strapi/types';
 import type { InvalidateConfig } from './services/cache';
 import {
   getUploadFileRepository,
+  getCacheService,
+  getBlurService,
   type PluginConfig,
-  type CacheService,
-  type BlurPlaceholderService,
 } from './types';
-
-function getCacheService(strapi: Core.Strapi): CacheService {
-  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
-}
-
-function getBlurService(strapi: Core.Strapi): BlurPlaceholderService {
-  return strapi
-    .plugin('next-image')
-    .service('blur-placeholder') as unknown as BlurPlaceholderService;
-}
 
 function invalidateCacheForUrl(strapi: Core.Strapi, url: string) {
   try {

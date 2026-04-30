@@ -8,7 +8,7 @@
 import React, { useRef, useEffect, useCallback, useState, useMemo, forwardRef, cache } from 'react';
 import ReactDOM from 'react-dom';
 import { getImgProps } from './get-img-props';
-import type { ImageProps, ImgProps, PlaceholderValue, OnLoad, OnLoadingComplete } from './types';
+import type { ImageProps, ImgProps, PlaceholderValue, OnLoad } from './types';
 import { imageConfigDefault } from './image-config';
 import defaultLoader from './image-loader';
 import { warnOnce } from './warn-once';
@@ -30,7 +30,6 @@ type ImageElementProps = ImgProps & {
   unoptimized: boolean;
   placeholder: PlaceholderValue;
   onLoadRef: React.MutableRefObject<OnLoad | undefined>;
-  onLoadingCompleteRef: React.MutableRefObject<OnLoadingComplete | undefined>;
   setBlurComplete: (b: boolean) => void;
   setShowAltText: (b: boolean) => void;
   sizesInput: string | undefined;
@@ -42,7 +41,6 @@ function handleLoading(
   img: ImgElementWithDataProp,
   placeholder: PlaceholderValue,
   onLoadRef: React.MutableRefObject<OnLoad | undefined>,
-  onLoadingCompleteRef: React.MutableRefObject<OnLoadingComplete | undefined>,
   setBlurComplete: (b: boolean) => void,
   unoptimized: boolean,
   sizesInput: string | undefined,
@@ -90,9 +88,6 @@ function handleLoading(
           event.stopPropagation();
         },
       } as unknown as React.SyntheticEvent<HTMLImageElement>);
-    }
-    if (onLoadingCompleteRef?.current) {
-      onLoadingCompleteRef.current(img);
     }
     if (process.env.NODE_ENV !== 'production') {
       const origSrc = new URL(src, 'http://n').searchParams.get('url') || src;
@@ -157,7 +152,6 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
       unoptimized,
       fill,
       onLoadRef,
-      onLoadingCompleteRef,
       setBlurComplete,
       setShowAltText,
       sizesInput,
@@ -190,27 +184,10 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
           }
         }
         if (img.complete) {
-          handleLoading(
-            img,
-            placeholder,
-            onLoadRef,
-            onLoadingCompleteRef,
-            setBlurComplete,
-            unoptimized,
-            sizesInput,
-          );
+          handleLoading(img, placeholder, onLoadRef, setBlurComplete, unoptimized, sizesInput);
         }
       },
-      [
-        src,
-        placeholder,
-        onLoadRef,
-        onLoadingCompleteRef,
-        setBlurComplete,
-        onError,
-        unoptimized,
-        sizesInput,
-      ],
+      [src, placeholder, onLoadRef, setBlurComplete, onError, unoptimized, sizesInput],
     );
 
     const ref = useCallback(
@@ -256,15 +233,7 @@ const ImageElement = forwardRef<HTMLImageElement | null, ImageElementProps>(
         ref={ref}
         onLoad={(event) => {
           const img = event.currentTarget as ImgElementWithDataProp;
-          handleLoading(
-            img,
-            placeholder,
-            onLoadRef,
-            onLoadingCompleteRef,
-            setBlurComplete,
-            unoptimized,
-            sizesInput,
-          );
+          handleLoading(img, placeholder, onLoadRef, setBlurComplete, unoptimized, sizesInput);
         }}
         onError={(event) => {
           // if the real image fails to load, this will ensure "alt" is visible
@@ -320,16 +289,11 @@ export const Image = forwardRef<HTMLImageElement | null, ImageProps>((props, for
     };
   }, []);
 
-  const { onLoad, onLoadingComplete } = props;
+  const { onLoad } = props;
   const onLoadRef = useRef(onLoad);
   useEffect(() => {
     onLoadRef.current = onLoad;
   }, [onLoad]);
-
-  const onLoadingCompleteRef = useRef(onLoadingComplete);
-  useEffect(() => {
-    onLoadingCompleteRef.current = onLoadingComplete;
-  }, [onLoadingComplete]);
 
   const [blurComplete, setBlurComplete] = useState(false);
   const [showAltText, setShowAltText] = useState(false);
@@ -349,7 +313,6 @@ export const Image = forwardRef<HTMLImageElement | null, ImageProps>((props, for
         placeholder={imgMeta.placeholder}
         fill={imgMeta.fill}
         onLoadRef={onLoadRef}
-        onLoadingCompleteRef={onLoadingCompleteRef}
         setBlurComplete={setBlurComplete}
         setShowAltText={setShowAltText}
         sizesInput={props.sizes}

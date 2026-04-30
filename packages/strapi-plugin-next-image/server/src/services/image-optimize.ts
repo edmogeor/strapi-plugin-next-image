@@ -1,8 +1,8 @@
 import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Core } from '@strapi/types';
-import type { CacheService } from '../types';
-import { isAnimated } from '../image-utils';
+import { getCacheService } from '../types';
+import { isAnimated, getContentTypeFromExt, getExtFromMime } from '../image-utils';
 
 export interface OptimizeParams {
   url: string;
@@ -18,41 +18,6 @@ export interface OptimizeResult {
   contentType: string;
   etag: string;
   filename: string;
-}
-
-function getCacheService(strapi: Core.Strapi): CacheService {
-  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
-}
-
-function getContentTypeFromExt(ext: string): string {
-  const map: Record<string, string> = {
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp',
-    '.avif': 'image/avif',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-    '.bmp': 'image/bmp',
-    '.tiff': 'image/tiff',
-  };
-  return map[ext.toLowerCase()] || 'application/octet-stream';
-}
-
-function getExtFromMime(mime: string): string {
-  const map: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/gif': 'gif',
-    'image/webp': 'webp',
-    'image/avif': 'avif',
-    'image/svg+xml': 'svg',
-    'image/x-icon': 'ico',
-    'image/bmp': 'bmp',
-    'image/tiff': 'tiff',
-  };
-  return map[mime] || 'bin';
 }
 
 // Track in-flight revalidations to avoid duplicate background work

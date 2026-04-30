@@ -1,19 +1,7 @@
 import type { Core } from '@strapi/types';
 import type { Context } from 'koa';
-import type { PluginConfig, HttpError, CacheService } from '../types';
-import type { OptimizeParams, OptimizeResult } from '../services/image-optimize';
-
-interface ImageOptimizeService {
-  optimize(params: OptimizeParams): Promise<OptimizeResult>;
-}
-
-function getCacheService(strapi: Core.Strapi): CacheService {
-  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
-}
-
-function getOptimizeService(strapi: Core.Strapi): ImageOptimizeService {
-  return strapi.plugin('next-image').service('next-image') as unknown as ImageOptimizeService;
-}
+import type { PluginConfig, HttpError } from '../types';
+import { getCacheService, getOptimizeService } from '../types';
 
 /**
  * Determine the best output format based on Accept header and plugin config.

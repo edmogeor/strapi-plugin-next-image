@@ -64,6 +64,7 @@ export interface HttpError extends Error {
 
 import type cacheServiceFactory from './services/cache';
 import type blurPlaceholderServiceFactory from './services/blur-placeholder';
+import type imageOptimizeServiceFactory from './services/image-optimize';
 
 /** Return type of the cache service factory. */
 export type CacheService = ReturnType<typeof cacheServiceFactory>;
@@ -71,7 +72,36 @@ export type CacheService = ReturnType<typeof cacheServiceFactory>;
 /** Return type of the blur-placeholder service factory. */
 export type BlurPlaceholderService = ReturnType<typeof blurPlaceholderServiceFactory>;
 
+/** Return type of the image-optimize service factory. */
+export type ImageOptimizeService = ReturnType<typeof imageOptimizeServiceFactory>;
+
+/**
+ * Typed accessors for Strapi plugin services.
+ * Centralising the `as unknown as` cast here so consumers get typed services
+ * without repeating the cast pattern across the codebase.
+ */
+export function getCacheService(strapi: Core.Strapi): CacheService {
+  return strapi.plugin('next-image').service('cache') as unknown as CacheService;
+}
+
+export function getBlurService(strapi: Core.Strapi): BlurPlaceholderService {
+  return strapi
+    .plugin('next-image')
+    .service('blur-placeholder') as unknown as BlurPlaceholderService;
+}
+
+export function getOptimizeService(strapi: Core.Strapi): ImageOptimizeService {
+  return strapi.plugin('next-image').service('next-image') as unknown as ImageOptimizeService;
+}
+
 /** Returns a properly-typed query repository for plugin::upload.file. */
 export function getUploadFileRepository(strapi: Core.Strapi): UploadFileRepository {
   return strapi.db.query('plugin::upload.file') as unknown as UploadFileRepository;
+}
+
+/** Returns the Strapi content-types registry with typed get() method. */
+export function getContentTypesRegistry(strapi: Core.Strapi): ContentTypesRegistry {
+  return (strapi as Core.Strapi & { get(key: string): unknown }).get(
+    'content-types',
+  ) as unknown as ContentTypesRegistry;
 }

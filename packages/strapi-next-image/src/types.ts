@@ -5,6 +5,20 @@
  */
 import type { CSSProperties, JSX } from 'react';
 
+export interface StrapiImageEmbeddedConfig {
+  deviceSizes: number[];
+  imageSizes: number[];
+  qualities: number[] | undefined;
+  formats: string[];
+  dangerouslyAllowSVG: boolean;
+}
+
+declare global {
+  interface Window {
+    __STRAPI_IMAGE_CONFIG__?: StrapiImageEmbeddedConfig;
+  }
+}
+
 // --- Strapi Media Types ---
 
 export interface StrapiMediaFormat {
@@ -69,7 +83,6 @@ export type LoadingValue = 'lazy' | 'eager' | undefined;
 
 export type PlaceholderValue = 'blur' | 'empty' | `data:image/${string}`;
 export type OnLoad = React.ReactEventHandler<HTMLImageElement>;
-export type OnLoadingComplete = (img: HTMLImageElement) => void;
 
 export type PlaceholderStyle = Partial<
   Pick<
@@ -98,18 +111,6 @@ export type ImageProps = Omit<
   decoding?: 'async' | 'auto' | 'sync';
   fetchPriority?: 'high' | 'low' | 'auto';
   sizes?: string;
-  /** @deprecated Use `onLoad` instead. */
-  onLoadingComplete?: OnLoadingComplete;
-  /** @deprecated Use `fill` instead. */
-  layout?: string;
-  /** @deprecated Use `style` instead. */
-  objectFit?: string;
-  /** @deprecated Use `style` instead. */
-  objectPosition?: string;
-  /** @deprecated Does nothing. */
-  lazyBoundary?: string;
-  /** @deprecated Does nothing. */
-  lazyRoot?: string;
 };
 
 // ImgProps uses Omit<ImageProps, ...> so that arbitrary HTML attributes

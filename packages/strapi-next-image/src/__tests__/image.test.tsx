@@ -151,27 +151,6 @@ describe('<Image /> — loading behaviour', () => {
     expect(onLoad).toHaveBeenCalledWith(expect.objectContaining({ target: img }));
   });
 
-  it('calls onLoadingComplete callback after image fires load event', async () => {
-    const onLoadingComplete = vi.fn();
-    render(
-      <Image
-        alt="test"
-        src="/photo.jpg"
-        width={200}
-        height={150}
-        onLoadingComplete={onLoadingComplete}
-      />,
-    );
-    const img = screen.getByRole('img');
-
-    await act(async () => {
-      img.dispatchEvent(new Event('load'));
-    });
-
-    await waitFor(() => expect(onLoadingComplete).toHaveBeenCalledOnce());
-    expect(onLoadingComplete).toHaveBeenCalledWith(img);
-  });
-
   it('unoptimized image src is passed through without /api/next-image', () => {
     render(<Image alt="test" src="/static/photo.jpg" width={200} height={150} unoptimized />);
     const img = screen.getByRole('img');

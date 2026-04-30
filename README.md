@@ -8,6 +8,9 @@
     <a href="https://www.npmjs.com/package/strapi-plugin-next-image">
       <img src="https://img.shields.io/npm/v/strapi-plugin-next-image.svg" alt="npm version"/>
     </a>
+    <a href="https://github.com/fallow-rs/fallow">
+      <img src="https://raw.githubusercontent.com/edmogeor/strapi-plugin-next-image/badges/badge.svg" alt="fallow health"/>
+    </a>
     <a href="./LICENSE">
       <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"/>
     </a>

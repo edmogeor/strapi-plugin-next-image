@@ -13,7 +13,6 @@ const tsRules = {
   '@typescript-eslint/no-explicit-any': 'warn',
   '@typescript-eslint/ban-ts-comment': 'warn',
   'no-undef': 'off',
-  'no-empty': ['error', { allowEmptyCatch: true }],
 } as const;
 
 export default [
@@ -32,6 +31,7 @@ export default [
     rules: {
       ...tsRules,
       ...reactHooks.configs.recommended.rules,
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   {

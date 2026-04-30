@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import { EXT_TO_CONTENT_TYPE } from '../image-utils';
 
 // fallow-ignore-next-line unused-type
 export interface CacheEntry {
@@ -19,16 +20,6 @@ interface CacheMetadata {
   etag: string;
   extension: string;
 }
-
-const extToContentType: Record<string, string> = {
-  webp: 'image/webp',
-  avif: 'image/avif',
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  gif: 'image/gif',
-  svg: 'image/svg+xml',
-};
 
 class LRUCache<K, V> {
   private map = new Map<K, V>();
@@ -193,7 +184,7 @@ export default () => {
 
       const entry: CacheEntry = {
         buffer,
-        contentType: extToContentType[disk.meta.extension] || 'application/octet-stream',
+        contentType: EXT_TO_CONTENT_TYPE[`.${disk.meta.extension}`] || 'application/octet-stream',
         etag: disk.meta.etag,
         extension: disk.meta.extension,
         isStale,
@@ -232,7 +223,7 @@ export default () => {
       // Update LRU with fresh entry
       memCache.set(key, {
         buffer,
-        contentType: extToContentType[extension] || 'application/octet-stream',
+        contentType: EXT_TO_CONTENT_TYPE[`.${extension}`] || 'application/octet-stream',
         etag,
         extension,
         isStale: false,

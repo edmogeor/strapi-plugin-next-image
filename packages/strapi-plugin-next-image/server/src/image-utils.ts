@@ -1,4 +1,40 @@
 /**
+ * Canonical map of file extension → MIME content type.
+ * All other extension/type lookups in this package derive from this map.
+ * Updating the list here updates getContentTypeFromExt, getExtFromMime,
+ * and the cache service's extToContentType simultaneously.
+ */
+export const EXT_TO_CONTENT_TYPE: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.bmp': 'image/bmp',
+  '.tiff': 'image/tiff',
+};
+
+/**
+ * Derive content type from file extension.
+ */
+export function getContentTypeFromExt(ext: string): string {
+  return EXT_TO_CONTENT_TYPE[ext.toLowerCase()] || 'application/octet-stream';
+}
+
+/**
+ * Derive file extension from MIME content type.
+ */
+export function getExtFromMime(mime: string): string {
+  for (const [ext, ct] of Object.entries(EXT_TO_CONTENT_TYPE)) {
+    if (ct === mime) return ext.replace('.', '');
+  }
+  return 'bin';
+}
+
+/**
  * Detect if an image buffer is animated (multi-frame GIF, animated WebP/PNG).
  *
  * - GIF: looks for multiple image descriptor bytes (0x2C).

@@ -130,19 +130,14 @@ export function getImgProps(
     style,
     overrideSrc,
     onLoad,
-    onLoadingComplete,
     onError,
     placeholder = 'empty',
     blurDataURL,
     fetchPriority,
     decoding = 'async',
-    layout,
-    objectFit,
-    objectPosition,
-    lazyBoundary,
-    lazyRoot,
     alt: altProp,
-    ...rest
+    loader: customImageLoader,
+    ...imgRest
   }: ImageProps,
   options: {
     defaultLoader: ImageLoaderWithConfig;
@@ -173,9 +168,8 @@ export function getImgProps(
   }
 
   // --- Resolve loader ---
-  // Extract non-img props from rest so they're not spread on <img>
-  const { loader: customImageLoader, srcSet: _srcSet, ...imgRest } = rest as any;
-
+  // imgRest contains only genuine HTML attributes safe to spread on <img>.
+  // customImageLoader was extracted in the parameter destructuring above.
   let loader: ImageLoaderWithConfig = defaultLoader;
   if (customImageLoader) {
     const customLoader = customImageLoader as ImageLoader;
@@ -183,29 +177,6 @@ export function getImgProps(
   }
 
   const isDefaultLoader = '__strapi_img_default' in loader;
-
-  // --- Handle legacy layout prop ---
-  if (layout) {
-    if (layout === 'fill') {
-      fill = true;
-    }
-    const layoutToStyle: Record<string, Record<string, string> | undefined> = {
-      intrinsic: { maxWidth: '100%', height: 'auto' },
-      responsive: { width: '100%', height: 'auto' },
-    };
-    const layoutToSizes: Record<string, string | undefined> = {
-      responsive: '100vw',
-      fill: '100vw',
-    };
-    const layoutStyle = layoutToStyle[layout];
-    if (layoutStyle) {
-      style = { ...style, ...layoutStyle };
-    }
-    const layoutSizes = layoutToSizes[layout];
-    if (layoutSizes && !sizes) {
-      sizes = layoutSizes;
-    }
-  }
 
   // --- Handle Strapi media object or string src ---
   let src: string;
@@ -368,22 +339,19 @@ export function getImgProps(
         `Image with src "${src}" is using unsupported "ref" property. Consider using the "onLoad" property instead.`,
       );
     }
-    if (onLoadingComplete) {
+    if ('onLoadingComplete' in imgRest) {
       warnOnce(
-        `Image with src "${src}" is using deprecated "onLoadingComplete" property. Please use the "onLoad" property instead.`,
+        `Image with src "${src}" is using removed "onLoadingComplete" property. Use "onLoad" instead.`,
       );
     }
-    for (const [legacyKey, legacyValue] of Object.entries({
-      layout,
-      objectFit,
-      objectPosition,
-      lazyBoundary,
-      lazyRoot,
-    })) {
-      if (legacyValue) {
-        warnOnce(
-          `Image with src "${src}" has legacy prop "${legacyKey}". Did you forget to run the codemod?`,
-        );
+    if (process.env.NODE_ENV !== 'production') {
+      const removedProps = ['layout', 'objectFit', 'objectPosition', 'lazyBoundary', 'lazyRoot'];
+      for (const key of removedProps) {
+        if (key in imgRest) {
+          warnOnce(
+            `Image with src "${src}" is using removed prop "${key}". This prop is no longer supported.`,
+          );
+        }
       }
     }
 
@@ -391,8 +359,8 @@ export function getImgProps(
     if (typeof window !== 'undefined' && !perfObserver && window.PerformanceObserver) {
       perfObserver = new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
-          // @ts-ignore - missing "LargestContentfulPaint" class with "element" prop
-          const imgSrc = (entry as any)?.element?.src || '';
+          // @ts-expect-error — LargestContentfulPaint "element" prop not typed in TS lib
+          const imgSrc = (entry.element as HTMLImageElement | undefined)?.src || '';
           const lcpImage = allImgs.get(imgSrc);
           if (
             lcpImage &&
@@ -428,8 +396,6 @@ export function getImgProps(
           top: 0,
           right: 0,
           bottom: 0,
-          objectFit,
-          objectPosition,
         }
       : {},
     showAltText ? {} : { color: 'transparent' },

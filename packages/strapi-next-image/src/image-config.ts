@@ -1,5 +1,11 @@
 import type { ImageConfigComplete } from './types';
 
+/**
+ * Client-side defaults mirror the server canonical config in
+ * packages/strapi-plugin-next-image/server/src/config.ts.
+ * These are fallback values used only before the first successful fetch
+ * from /api/next-image/config. The server config is the SSOT.
+ */
 export let imageConfigDefault: ImageConfigComplete = {
   deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
   imageSizes: [32, 48, 64, 96, 128, 256, 384],
@@ -61,7 +67,7 @@ export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
   if (typeof window !== 'undefined') {
     // Client: apply config embedded by the server in the SSR HTML (avoids CORS).
     // The Image component renders an inline <script> that sets this global during SSR.
-    const embedded = (window as any).__STRAPI_IMAGE_CONFIG__;
+    const embedded = window.__STRAPI_IMAGE_CONFIG__;
     if (embedded) {
       imageConfigDefault = {
         ...imageConfigDefault,
