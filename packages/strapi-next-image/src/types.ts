@@ -9,7 +9,7 @@ export interface StrapiImageEmbeddedConfig {
   deviceSizes: number[];
   imageSizes: number[];
   qualities: number[] | undefined;
-  formats: string[];
+  formats: ImageFormat[];
   dangerouslyAllowSVG: boolean;
 }
 
