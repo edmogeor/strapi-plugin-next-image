@@ -2,7 +2,7 @@ import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Core } from '@strapi/types';
 import { getCacheService } from '../types';
-import { isAnimated, getContentTypeFromExt, getExtFromMime } from '../image-utils';
+import { isAnimated, getContentTypeFromExt, getExtFromMime, loadSharp } from '../image-utils';
 
 export interface OptimizeParams {
   url: string;
@@ -154,10 +154,9 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     }
 
     // --- Optimize with sharp ---
-    let sharpFn: (input: Buffer) => import('sharp').Sharp;
+    let sharp: Awaited<ReturnType<typeof loadSharp>>;
     try {
-      const mod = await import('sharp');
-      sharpFn = mod.default ?? (mod as unknown as typeof mod.default);
+      sharp = await loadSharp();
     } catch {
       const err = new Error('sharp is required for image optimization') as Error & {
         status: number;
@@ -166,7 +165,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       throw err;
     }
 
-    let pipeline = sharpFn(originalBuffer).resize(width, undefined, {
+    let pipeline = sharp(originalBuffer).resize(width, undefined, {
       withoutEnlargement: true,
     });
 

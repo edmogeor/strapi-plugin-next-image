@@ -2,7 +2,7 @@ import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Core } from '@strapi/types';
 import { getUploadFileRepository, type PluginConfig } from '../types';
-import { isAnimated } from '../image-utils';
+import { isAnimated, loadSharp } from '../image-utils';
 
 const SUPPORTED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -95,17 +95,16 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
       const blurSize = pluginConfig.blurSize || 8;
 
-      let sharpFn: (input: Buffer) => import('sharp').Sharp;
+      let sharp: Awaited<ReturnType<typeof loadSharp>>;
       try {
-        const mod = await import('sharp');
-        sharpFn = mod.default ?? (mod as unknown as typeof mod.default);
+        sharp = await loadSharp();
       } catch {
         strapi.log.warn('sharp is required for blur placeholder generation');
         return null;
       }
 
       try {
-        const tiny = await sharpFn(buffer)
+        const tiny = await sharp(buffer)
           .resize(blurSize, undefined, { withoutEnlargement: true })
           .jpeg({ quality: 70 })
           .toBuffer();

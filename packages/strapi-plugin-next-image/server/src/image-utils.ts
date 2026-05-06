@@ -1,3 +1,24 @@
+import type sharpType from 'sharp';
+
+type SharpFn = typeof sharpType;
+
+let sharpPromise: Promise<SharpFn> | null = null;
+
+/**
+ * Load the optional `sharp` dependency, caching the resolved module so repeated
+ * callers share one dynamic import. Throws if sharp is not installed — callers
+ * are responsible for catching and degrading appropriately.
+ */
+export function loadSharp(): Promise<SharpFn> {
+  if (!sharpPromise) {
+    sharpPromise = import('sharp').then((mod) => {
+      const m = mod as unknown as { default?: SharpFn };
+      return m.default ?? (mod as unknown as SharpFn);
+    });
+  }
+  return sharpPromise;
+}
+
 /**
  * Canonical map of file extension → MIME content type.
  * All other extension/type lookups in this package derive from this map.
