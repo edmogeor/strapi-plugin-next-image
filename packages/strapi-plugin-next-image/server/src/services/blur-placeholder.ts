@@ -12,6 +12,10 @@ const SUPPORTED_MIME_TYPES = new Set([
   'image/gif',
 ]);
 
+// Written to `blurDataURL` after a failed generation so the backfill skips the
+// row next boot. Stays falsy for `if (file.blurDataURL)` checks downstream.
+export const BLUR_SKIP_SENTINEL = '';
+
 export default ({ strapi }: { strapi: Core.Strapi }) => {
   // URLs confirmed to have a blurDataURL — skip DB lookup on future requests.
   const blurChecked = new Set<string>();
@@ -47,19 +51,18 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
 
         if (!file) return;
 
-        if (file.blurDataURL) {
+        // Non-null means we already attempted generation (success or sentinel).
+        if (file.blurDataURL !== null) {
           blurChecked.add(fileUrl);
           return;
         }
 
         const blurDataURL = await service.generate(fileUrl, file.mime);
-        if (blurDataURL) {
-          await repo.update({
-            where: { id: file.id },
-            data: { blurDataURL },
-          });
-          blurChecked.add(fileUrl);
-        }
+        await repo.update({
+          where: { id: file.id },
+          data: { blurDataURL: blurDataURL ?? BLUR_SKIP_SENTINEL },
+        });
+        blurChecked.add(fileUrl);
       } catch (err) {
         strapi.log.error(`Failed to generate missing blur placeholder for ${fileUrl}:`, err);
       } finally {

@@ -6,6 +6,7 @@ import {
   getBlurService,
   type PluginConfig,
 } from './types';
+import { BLUR_SKIP_SENTINEL } from './services/blur-placeholder';
 
 function invalidateCacheForUrl(strapi: Core.Strapi, url: string) {
   try {
@@ -30,12 +31,10 @@ async function generateAndSaveBlur(
   try {
     const blurService = getBlurService(strapi);
     const blurDataURL = await blurService.generate(fileUrl, mime);
-    if (blurDataURL) {
-      await getUploadFileRepository(strapi).update({
-        where: { id: fileId },
-        data: { blurDataURL },
-      });
-    }
+    await getUploadFileRepository(strapi).update({
+      where: { id: fileId },
+      data: { blurDataURL: blurDataURL ?? BLUR_SKIP_SENTINEL },
+    });
   } catch (err) {
     strapi.log.error(`Failed to generate blur placeholder for file ${fileId}:`, err);
   }

@@ -15,7 +15,7 @@ vi.mock('fs/promises', async (importOriginal) => {
 });
 
 import { JPEG_1x1, WEBP_1x1, createImageFixtures } from './image-fixtures';
-import createBlurPlaceholderService from '../services/blur-placeholder';
+import createBlurPlaceholderService, { BLUR_SKIP_SENTINEL } from '../services/blur-placeholder';
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures — real image buffers so sharp can actually process them
@@ -186,6 +186,32 @@ describe('blurPlaceholderService.generateIfMissing', () => {
         }),
       }),
     );
+  });
+
+  it('persists the skip sentinel when generation yields no blur (unsupported mime)', async () => {
+    const { mockStrapi, mockRepo } = makeStrapi();
+    mockRepo.findOne.mockResolvedValue({ id: 7, mime: 'image/svg+xml', blurDataURL: null });
+    mockRepo.update.mockResolvedValue({ id: 7 });
+
+    const svc = createBlurPlaceholderService({ strapi: mockStrapi });
+    await svc.generateIfMissing('/uploads/icon.svg');
+
+    expect(mockRepo.update).toHaveBeenCalledWith({
+      where: { id: 7 },
+      data: { blurDataURL: BLUR_SKIP_SENTINEL },
+    });
+  });
+
+  it('skips when blurDataURL is the skip sentinel (already attempted)', async () => {
+    const { mockStrapi, mockRepo } = makeStrapi();
+    mockRepo.findOne.mockResolvedValue({
+      id: 1,
+      mime: 'image/svg+xml',
+      blurDataURL: BLUR_SKIP_SENTINEL,
+    });
+    const svc = createBlurPlaceholderService({ strapi: mockStrapi });
+    await svc.generateIfMissing('/uploads/icon.svg');
+    expect(mockRepo.update).not.toHaveBeenCalled();
   });
 
   it('skips the DB lookup on second call for same URL after blur is confirmed', async () => {
