@@ -261,7 +261,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       // @ts-expect-error — removed prop, test verifies warning
       onLoadingComplete: () => {},
-    } as unknown as ImageProps);
+    });
     expect(warningMessages.some((m) => m.includes('removed "onLoadingComplete"'))).toBe(true);
   });
 
@@ -297,7 +297,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       // @ts-expect-error — removed prop, test verifies warning
       layout: 'responsive',
-    } as unknown as ImageProps);
+    });
     expect(warningMessages.some((m) => m.includes('removed prop "layout"'))).toBe(true);
   });
 
@@ -309,7 +309,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       // @ts-expect-error — removed prop, test verifies warning
       objectFit: 'cover',
-    } as unknown as ImageProps);
+    });
     expect(warningMessages.some((m) => m.includes('removed prop "objectFit"'))).toBe(true);
   });
 
@@ -321,7 +321,7 @@ describe('getImgProps() — dev-mode warnings', () => {
       height: 100,
       // @ts-expect-error — removed prop, test verifies warning
       objectPosition: 'center',
-    } as unknown as ImageProps);
+    });
     expect(warningMessages.some((m) => m.includes('removed prop "objectPosition"'))).toBe(true);
   });
 

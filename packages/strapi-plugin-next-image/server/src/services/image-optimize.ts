@@ -13,7 +13,7 @@ export interface OptimizeParams {
   dangerouslyAllowSVG: boolean;
 }
 
-interface OptimizeResult {
+export interface OptimizeResult {
   buffer: Buffer;
   contentType: string;
   etag: string;
