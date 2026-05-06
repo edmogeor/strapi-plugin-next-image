@@ -131,7 +131,8 @@ describe('getImgProps() — dev-mode errors', () => {
       call({
         src: '/test.png',
         alt: '',
-        width: 'abc' as any,
+        // @ts-expect-error testing runtime validation of invalid type
+        width: 'abc',
         height: 100,
       }),
     ).toThrow('invalid "width"');
@@ -143,7 +144,8 @@ describe('getImgProps() — dev-mode errors', () => {
         src: '/test.png',
         alt: '',
         width: 100,
-        height: 'abc' as any,
+        // @ts-expect-error testing runtime validation of invalid type
+        height: 'abc',
       }),
     ).toThrow('invalid "height"');
   });
@@ -155,7 +157,8 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         width: 100,
         height: 100,
-        loading: 'invalid' as any,
+        // @ts-expect-error testing runtime validation of invalid value
+        loading: 'invalid',
       }),
     ).toThrow('invalid "loading"');
   });
@@ -193,7 +196,8 @@ describe('getImgProps() — dev-mode errors', () => {
         alt: '',
         width: 100,
         height: 100,
-        placeholder: 'invalid' as any,
+        // @ts-expect-error testing runtime validation of invalid value
+        placeholder: 'invalid',
       }),
     ).toThrow('invalid "placeholder"');
   });

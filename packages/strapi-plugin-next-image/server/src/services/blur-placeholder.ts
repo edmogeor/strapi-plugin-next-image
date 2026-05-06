@@ -97,8 +97,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
 
       let sharpFn: (input: Buffer) => import('sharp').Sharp;
       try {
-        const sharpModule = require('sharp');
-        sharpFn = sharpModule.default || sharpModule;
+        const mod = await import('sharp');
+        sharpFn = mod.default ?? (mod as unknown as typeof mod.default);
       } catch {
         strapi.log.warn('sharp is required for blur placeholder generation');
         return null;

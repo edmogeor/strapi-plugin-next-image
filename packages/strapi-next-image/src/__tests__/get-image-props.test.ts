@@ -296,9 +296,10 @@ describe('getImageProps()', () => {
       'aria-label': 'Hero image',
       id: 'hero-img',
     });
-    expect((props as any)['data-testid']).toBe('hero');
-    expect((props as any)['aria-label']).toBe('Hero image');
-    expect((props as any).id).toBe('hero-img');
+    const extra = props as Record<string, unknown>;
+    expect(extra['data-testid']).toBe('hero');
+    expect(extra['aria-label']).toBe('Hero image');
+    expect(extra.id).toBe('hero-img');
   });
 
   it('should handle overrideSrc', () => {

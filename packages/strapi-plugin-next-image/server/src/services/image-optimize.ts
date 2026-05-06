@@ -156,8 +156,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     // --- Optimize with sharp ---
     let sharpFn: (input: Buffer) => import('sharp').Sharp;
     try {
-      const sharpModule = require('sharp');
-      sharpFn = sharpModule.default || sharpModule;
+      const mod = await import('sharp');
+      sharpFn = mod.default ?? (mod as unknown as typeof mod.default);
     } catch {
       const err = new Error('sharp is required for image optimization') as Error & {
         status: number;
