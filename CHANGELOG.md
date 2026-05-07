@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-05-07
+
+### Fixed
+
+- **strapi-plugin-next-image** — Blur placeholder backfill no longer re-runs on every Strapi boot for files where generation legitimately produces no result (SVGs, animated images, missing files on disk, sharp not installed). A sentinel value is now persisted in `blurDataURL` for attempted-but-failed rows so the next backfill query skips them. Stays falsy for downstream `if (file.blurDataURL)` checks.
+- **strapi-plugin-next-image** — Re-exported `OptimizeResult` so the default plugin factory in `index.ts` no longer leaks a private name (TS4082).
+- **strapi-next-image** — Removed redundant `as unknown as ImageProps` casts in test files that were silently swallowing the per-line `@ts-expect-error` directives (TS2578).
+- **strapi-plugin-next-image** — `moduleResolution: "node"` → `"bundler"` in the plugin tsconfig (deprecated in TypeScript 6, removed in 7).
+- **strapi-next-image** — Replaced restrictive `typeRoots` with explicit `types: ["node", "react", "react-dom"]` so workspace-local TypeScript 6 picks up Node and React globals consistently.
+
+### Changed
+
+- **strapi-plugin-next-image** — Extracted `loadSharp()` helper to `image-utils.ts` to deduplicate the dynamic-import + ESM/CJS-interop boilerplate across the blur, optimize, and test-fixture call sites. The resolved sharp module is cached so repeated callers share one import promise.
+
+### CI
+
+- Added `typecheck` script (`tsc --noEmit`) to both packages and a root aggregator; wired into the CI and release workflows between Lint and Tests.
+- Added a root `vitest.config.ts` aggregating per-package projects so `vitest run` from the repo root picks up each package's local environment (jsdom for the React component, node for the plugin).
+
 ## [1.0.0] - 2026-04-30
 
 ### Added
