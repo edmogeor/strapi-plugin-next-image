@@ -41,6 +41,7 @@
   "scripts": {
     "build": "strapi-plugin build",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "verify": "strapi-plugin verify",
     "watch": "strapi-plugin watch"
   },

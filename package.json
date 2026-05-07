@@ -11,7 +11,8 @@
     "fallow:check": "fallow",
     "fallow:fix": "fallow fix --yes",
     "lint": "eslint packages/",
-    "lint:fix": "eslint packages/ --fix"
+    "lint:fix": "eslint packages/ --fix",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,json,md,yml,yaml}": [
