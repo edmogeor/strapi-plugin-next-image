@@ -13,6 +13,7 @@ export interface OptimizeParams {
   dangerouslyAllowSVG: boolean;
 }
 
+// fallow-ignore-next-line unused-type
 export interface OptimizeResult {
   buffer: Buffer;
   contentType: string;
