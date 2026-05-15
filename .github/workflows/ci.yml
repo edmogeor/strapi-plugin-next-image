@@ -46,24 +46,18 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install fallow
-        run: npm install -g fallow
+      - run: npm install -g fallow
 
-      - name: Generate health badge
-        run: |
-          mkdir -p badge-output
-          fallow health --format badge --score --hotspots > badge-output/badge.svg
+      - run: |
+          mkdir -p badge-out
+          fallow health --format badge --score --hotspots > badge-out/badge.svg
 
-      - name: Publish badge
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: badge-output
+          publish_dir: ./badge-out
           publish_branch: badges
-          force_orphan: true
-          enable_jekyll: false

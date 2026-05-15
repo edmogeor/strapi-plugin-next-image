@@ -9,7 +9,7 @@
       <img src="https://github.com/edmogeor/strapi-plugin-next-image/actions/workflows/ci.yml/badge.svg" alt="CI"/>
     </a>
     <a href="https://github.com/fallow-rs/fallow">
-      <img src="https://raw.githubusercontent.com/edmogeor/strapi-plugin-next-image/badges/badge.svg" alt="fallow health"/>
+      <img src="https://edmogeor.github.io/strapi-plugin-next-image/badge.svg" alt="fallow health"/>
     </a>
     <a href="./LICENSE">
       <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"/>
