@@ -54,7 +54,7 @@ jobs:
 
       - run: |
           mkdir -p badge-out
-          fallow health --format badge --score --hotspots > badge-out/badge.svg
+          fallow health --format badge --score > badge-out/badge.svg
 
       - uses: peaceiris/actions-gh-pages@v4
         with:
