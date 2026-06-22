@@ -15,42 +15,68 @@ export interface OptimizeParams {
   dangerouslyAllowSVG: boolean;
 }
 
+/** A decoded original image plus the metadata needed to name and convert it. */
+interface ImageSource {
+  buffer: Buffer;
+  contentType: string;
+  basename: string;
+  ext: string;
+}
+
+function httpError(message: string, status: number): Error & { status: number } {
+  const err = new Error(message) as Error & { status: number };
+  err.status = status;
+  return err;
+}
+
 // Cap remote downloads to avoid memory blowups from hostile/huge upstreams.
 const MAX_REMOTE_BYTES = 50 * 1024 * 1024; // 50 MB
 const REMOTE_FETCH_TIMEOUT_MS = 10_000;
 
 /** Fetch an allow-listed remote image. Throws an Error with `.status` on failure. */
-async function fetchRemoteImage(
-  url: string,
-): Promise<{ buffer: Buffer; contentType: string; basename: string; ext: string }> {
-  const fail = (message: string, status: number) => {
-    const err = new Error(message) as Error & { status: number };
-    err.status = status;
-    return err;
-  };
-
+async function fetchRemoteImage(url: string): Promise<ImageSource> {
   let res: Response;
   try {
     res = await fetch(url, { signal: AbortSignal.timeout(REMOTE_FETCH_TIMEOUT_MS) });
   } catch {
-    throw fail(`Failed to fetch remote image: ${url}`, 502);
+    throw httpError(`Failed to fetch remote image: ${url}`, 502);
   }
   if (!res.ok) {
-    throw fail(`Remote image responded with ${res.status}`, res.status === 404 ? 404 : 502);
+    throw httpError(`Remote image responded with ${res.status}`, res.status === 404 ? 404 : 502);
   }
 
   const arrayBuf = await res.arrayBuffer();
   if (arrayBuf.byteLength > MAX_REMOTE_BYTES) {
-    throw fail('Remote image exceeds maximum allowed size', 400);
+    throw httpError('Remote image exceeds maximum allowed size', 400);
   }
-  const buffer = Buffer.from(arrayBuf);
 
   const pathname = new URL(url).pathname;
   const ext = path.extname(pathname);
   const contentType =
     res.headers.get('content-type')?.split(';')[0].trim() || getContentTypeFromExt(ext);
-  const basename = path.basename(pathname, ext) || 'image';
-  return { buffer, contentType, basename, ext };
+  return {
+    buffer: Buffer.from(arrayBuf),
+    contentType,
+    basename: path.basename(pathname, ext) || 'image',
+    ext,
+  };
+}
+
+/** Read a local upload from `public/`. Throws a 404 Error if the file is missing. */
+async function readLocalImage(url: string): Promise<ImageSource> {
+  const filePath = path.join(process.cwd(), 'public', url);
+  try {
+    await fsp.access(filePath);
+  } catch {
+    throw httpError(`Image not found: ${url}`, 404);
+  }
+  const ext = path.extname(url);
+  return {
+    buffer: await fsp.readFile(filePath),
+    contentType: getContentTypeFromExt(ext),
+    basename: path.basename(url, ext),
+    ext,
+  };
 }
 
 // fallow-ignore-next-line unused-type
@@ -136,34 +162,12 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     const formatKey = outputFormat || 'original';
 
     // --- Read the original image (remote allow-listed URL or local uploads file) ---
-    let originalBuffer: Buffer;
-    let ext: string;
-    let basename: string;
-    let originalContentType: string;
-
-    if (isRemote) {
-      const fetched = await fetchRemoteImage(url);
-      originalBuffer = fetched.buffer;
-      ext = fetched.ext;
-      basename = fetched.basename;
-      originalContentType = fetched.contentType;
-    } else {
-      const uploadsDir = path.join(process.cwd(), 'public');
-      const filePath = path.join(uploadsDir, url);
-
-      try {
-        await fsp.access(filePath);
-      } catch {
-        const err = new Error(`Image not found: ${url}`) as Error & { status: number };
-        err.status = 404;
-        throw err;
-      }
-
-      originalBuffer = await fsp.readFile(filePath);
-      ext = path.extname(url);
-      basename = path.basename(url, ext);
-      originalContentType = getContentTypeFromExt(ext);
-    }
+    const {
+      buffer: originalBuffer,
+      ext,
+      basename,
+      contentType: originalContentType,
+    } = isRemote ? await fetchRemoteImage(url) : await readLocalImage(url);
 
     // --- SVG handling ---
     if (originalContentType === 'image/svg+xml') {
