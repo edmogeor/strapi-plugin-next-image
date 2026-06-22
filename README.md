@@ -133,20 +133,39 @@ export default {
       minimumCacheTTL: 14400,
       dangerouslyAllowSVG: false,
       blurSize: 8,
+      remotePatterns: [{ protocol: 'https', hostname: 'storage.googleapis.com' }],
     },
   },
 };
 ```
 
-| Option                | Default                                         | Description                |
-| --------------------- | ----------------------------------------------- | -------------------------- |
-| `deviceSizes`         | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints       |
-| `imageSizes`          | `[32, 48, 64, 96, 128, 256, 384]`               | Fixed-width sizes          |
-| `qualities`           | `[75]`                                          | Allowed quality values     |
-| `formats`             | `['image/webp']`                                | Output formats             |
-| `minimumCacheTTL`     | `14400`                                         | Cache lifetime in seconds  |
-| `dangerouslyAllowSVG` | `false`                                         | Allow SVG passthrough      |
-| `blurSize`            | `8`                                             | Blur thumbnail width in px |
+| Option                | Default                                         | Description                         |
+| --------------------- | ----------------------------------------------- | ----------------------------------- |
+| `deviceSizes`         | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints                |
+| `imageSizes`          | `[32, 48, 64, 96, 128, 256, 384]`               | Fixed-width sizes                   |
+| `qualities`           | `[75]`                                          | Allowed quality values              |
+| `formats`             | `['image/webp']`                                | Output formats                      |
+| `minimumCacheTTL`     | `14400`                                         | Cache lifetime in seconds           |
+| `dangerouslyAllowSVG` | `false`                                         | Allow SVG passthrough               |
+| `blurSize`            | `8`                                             | Blur thumbnail width in px          |
+| `remotePatterns`      | `[]`                                            | Allow-listed external image origins |
+
+#### Remote patterns (external storage)
+
+By default only local `/uploads/` paths are optimized. To optimize images served from
+an external upload provider (S3, Google Cloud Storage, etc.), allow-list their origins
+with `remotePatterns`, mirroring [`next/image`](https://nextjs.org/docs/app/api-reference/components/image#remotepatterns):
+
+```ts
+remotePatterns: [
+  { protocol: 'https', hostname: 'storage.googleapis.com' },
+  { protocol: 'https', hostname: '**.s3.amazonaws.com', pathname: '/my-bucket/**' },
+],
+```
+
+Only `hostname` is required (`*` matches one subdomain, `**` matches any number). Absolute
+URLs are rejected unless they match a configured pattern. When using a separate frontend,
+set the loader `path`/base to your Strapi URL so absolute `src` values reach the optimizer.
 
 ### API Endpoint
 
@@ -154,12 +173,12 @@ export default {
 GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 ```
 
-| Param | Required | Description                                      |
-| ----- | -------- | ------------------------------------------------ |
-| `url` | Yes      | Path starting with `/uploads/`                   |
-| `w`   | Yes      | Width — must be in `deviceSizes` or `imageSizes` |
-| `q`   | No       | Quality 1–100 (default 75)                       |
-| `f`   | No       | Format override (`webp`, `avif`)                 |
+| Param | Required | Description                                                     |
+| ----- | -------- | --------------------------------------------------------------- |
+| `url` | Yes      | `/uploads/` path, or an absolute URL matching a `remotePattern` |
+| `w`   | Yes      | Width — must be in `deviceSizes` or `imageSizes`                |
+| `q`   | No       | Quality 1–100 (default 75)                                      |
+| `f`   | No       | Format override (`webp`, `avif`)                                |
 
 ## Development
 
