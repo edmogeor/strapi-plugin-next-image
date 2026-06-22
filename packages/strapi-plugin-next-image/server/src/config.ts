@@ -4,6 +4,17 @@
  * The client package mirrors these values as fallback defaults —
  * keep them in sync. See packages/strapi-next-image/src/image-config.ts.
  */
+function validateRemotePatterns(remotePatterns: unknown) {
+  if (!Array.isArray(remotePatterns)) {
+    throw new Error('remotePatterns must be an array');
+  }
+  for (const p of remotePatterns) {
+    if (!p || typeof (p as { hostname?: unknown }).hostname !== 'string') {
+      throw new Error('each remotePattern must define a string "hostname"');
+    }
+  }
+}
+
 export default {
   default: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -32,14 +43,7 @@ export default {
       throw new Error('blurSize must be a number');
     }
     if (config.remotePatterns) {
-      if (!Array.isArray(config.remotePatterns)) {
-        throw new Error('remotePatterns must be an array');
-      }
-      for (const p of config.remotePatterns) {
-        if (!p || typeof (p as { hostname?: unknown }).hostname !== 'string') {
-          throw new Error('each remotePattern must define a string "hostname"');
-        }
-      }
+      validateRemotePatterns(config.remotePatterns);
     }
   },
 };
