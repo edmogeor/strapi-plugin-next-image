@@ -20,7 +20,6 @@ interface ImageSource {
   buffer: Buffer;
   contentType: string;
   basename: string;
-  ext: string;
 }
 
 function httpError(message: string, status: number): Error & { status: number } {
@@ -58,7 +57,6 @@ async function fetchRemoteImage(url: string): Promise<ImageSource> {
     buffer: Buffer.from(arrayBuf),
     contentType,
     basename: path.basename(pathname, ext) || 'image',
-    ext,
   };
 }
 
@@ -75,7 +73,6 @@ async function readLocalImage(url: string): Promise<ImageSource> {
     buffer: await fsp.readFile(filePath),
     contentType: getContentTypeFromExt(ext),
     basename: path.basename(url, ext),
-    ext,
   };
 }
 
@@ -155,7 +152,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     // --- Read the original image (remote allow-listed URL or local uploads file) ---
     const {
       buffer: originalBuffer,
-      ext,
       basename,
       contentType: originalContentType,
     } = isRemote ? await fetchRemoteImage(url) : await readLocalImage(url);
