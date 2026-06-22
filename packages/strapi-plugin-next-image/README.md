@@ -33,20 +33,48 @@ export default {
       minimumCacheTTL: 14400,
       dangerouslyAllowSVG: false,
       blurSize: 8,
+      remotePatterns: [{ protocol: 'https', hostname: 'storage.googleapis.com' }],
     },
   },
 };
 ```
 
-| Option | Default | Description |
-|---|---|---|
-| `deviceSizes` | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints |
-| `imageSizes` | `[32, 48, 64, 96, 128, 256, 384]` | Fixed-width image sizes |
-| `qualities` | `[75]` | Allowed quality values |
-| `formats` | `['image/webp']` | Output formats |
-| `minimumCacheTTL` | `14400` | Cache lifetime in seconds |
-| `dangerouslyAllowSVG` | `false` | Allow SVG passthrough |
-| `blurSize` | `8` | Width of blur placeholder thumbnails (px) |
+| Option                | Default                                         | Description                                     |
+| --------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| `deviceSizes`         | `[640, 750, 828, 1080, 1200, 1920, 2048, 3840]` | Viewport breakpoints                            |
+| `imageSizes`          | `[32, 48, 64, 96, 128, 256, 384]`               | Fixed-width image sizes                         |
+| `qualities`           | `[75]`                                          | Allowed quality values                          |
+| `formats`             | `['image/webp']`                                | Output formats                                  |
+| `minimumCacheTTL`     | `14400`                                         | Cache lifetime in seconds                       |
+| `dangerouslyAllowSVG` | `false`                                         | Allow SVG passthrough                           |
+| `blurSize`            | `8`                                             | Width of blur placeholder thumbnails (px)       |
+| `remotePatterns`      | `[]`                                            | Allow-listed external image origins (see below) |
+
+### Remote patterns (external storage)
+
+By default only local `/uploads/` paths are optimized. To optimize images served
+from an external upload provider (S3, Google Cloud Storage, etc.), allow-list their
+origins with `remotePatterns`, mirroring [`next/image`](https://nextjs.org/docs/app/api-reference/components/image#remotepatterns):
+
+```ts
+remotePatterns: [
+  { protocol: 'https', hostname: 'storage.googleapis.com' },
+  { protocol: 'https', hostname: '**.s3.amazonaws.com', pathname: '/my-bucket/**' },
+],
+```
+
+| Field      | Required | Description                                                    |
+| ---------- | -------- | -------------------------------------------------------------- |
+| `hostname` | Yes      | Host glob — `*` matches one subdomain, `**` matches any number |
+| `protocol` | No       | `http` or `https` (omit to allow either)                       |
+| `port`     | No       | Literal port, or `''` for none                                 |
+| `pathname` | No       | Path glob, defaults to `**`                                    |
+| `search`   | No       | Literal query string, e.g. `?v=1`                              |
+
+Absolute URLs are rejected with `400 "url" parameter is not allowed` unless they
+match a configured pattern. The frontend loader forwards absolute `src` values
+that are cross-origin to your Strapi server, so set the loader `path`/base to your
+Strapi URL when using a separate frontend.
 
 ## API
 
@@ -56,12 +84,12 @@ export default {
 GET /api/next-image?url=/uploads/file.jpg&w=1080&q=75&f=webp
 ```
 
-| Param | Required | Description |
-|---|---|---|
-| `url` | Yes | Path starting with `/uploads/` |
-| `w` | Yes | Width — must be in `deviceSizes` or `imageSizes` |
-| `q` | No | Quality 1–100 (default 75) |
-| `f` | No | Format override (`webp`, `avif`) |
+| Param | Required | Description                                                                              |
+| ----- | -------- | ---------------------------------------------------------------------------------------- |
+| `url` | Yes      | Path starting with `/uploads/`, or an absolute URL matching a configured `remotePattern` |
+| `w`   | Yes      | Width — must be in `deviceSizes` or `imageSizes`                                         |
+| `q`   | No       | Quality 1–100 (default 75)                                                               |
+| `f`   | No       | Format override (`webp`, `avif`)                                                         |
 
 ### Configuration
 

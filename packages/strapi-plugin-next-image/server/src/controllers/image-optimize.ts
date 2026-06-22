@@ -2,6 +2,7 @@ import type { Core } from '@strapi/types';
 import type { Context } from 'koa';
 import type { PluginConfig, HttpError } from '../types';
 import { getCacheService, getOptimizeService } from '../types';
+import { hasRemoteMatch } from '../remote-pattern';
 
 /**
  * Determine the best output format based on Accept header and plugin config.
@@ -38,15 +39,50 @@ const controller: Core.Controller = {
       return;
     }
 
-    // Only allow local upload URLs
-    if (!url.startsWith('/uploads/')) {
+    // --- Load plugin config ---
+    const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
+
+    // --- Validate url against allow-list (mirrors next/image image-optimizer) ---
+    // Protocol-relative URLs (//host/...) are ambiguous and never allowed.
+    if (url.startsWith('//')) {
       ctx.status = 400;
-      ctx.body = { error: '"url" must start with /uploads/' };
+      ctx.body = { error: '"url" parameter cannot be a protocol-relative URL (//)' };
       return;
     }
 
-    // --- Load plugin config ---
-    const pluginConfig = strapi.config.get('plugin::next-image') as PluginConfig;
+    let isRemote: boolean;
+    if (url.startsWith('/')) {
+      // Local path: restricted to Strapi's uploads directory.
+      // ponytail: keep the /uploads/ guard instead of next.js localPatterns;
+      // all local Strapi assets live under /uploads/. Add localPatterns if that changes.
+      if (!url.startsWith('/uploads/')) {
+        ctx.status = 400;
+        ctx.body = { error: '"url" must start with /uploads/' };
+        return;
+      }
+      isRemote = false;
+    } else {
+      // Absolute URL: only allowed if it matches a configured remotePattern.
+      let parsed: URL;
+      try {
+        parsed = new URL(url);
+      } catch {
+        ctx.status = 400;
+        ctx.body = { error: '"url" parameter is invalid' };
+        return;
+      }
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        ctx.status = 400;
+        ctx.body = { error: '"url" parameter is invalid' };
+        return;
+      }
+      if (!hasRemoteMatch(pluginConfig.remotePatterns ?? [], parsed)) {
+        ctx.status = 400;
+        ctx.body = { error: '"url" parameter is not allowed' };
+        return;
+      }
+      isRemote = true;
+    }
 
     const allSizes = [...pluginConfig.deviceSizes, ...pluginConfig.imageSizes].sort(
       (a, b) => a - b,
@@ -106,6 +142,7 @@ const controller: Core.Controller = {
       const optimizeService = getOptimizeService(strapi);
       const result = await optimizeService.optimize({
         url,
+        isRemote,
         width,
         quality,
         outputFormat,

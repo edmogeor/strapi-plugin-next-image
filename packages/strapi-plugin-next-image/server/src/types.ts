@@ -1,5 +1,23 @@
 import type { Core } from '@strapi/types';
 
+/**
+ * Allow-list entry for optimizing images hosted on external origins
+ * (e.g. S3, Google Cloud Storage). Mirrors `next/image` remotePatterns.
+ * @see https://nextjs.org/docs/app/api-reference/components/image#remotepatterns
+ */
+export interface RemotePattern {
+  /** Must be `http` or `https`. Omit to match either. */
+  protocol?: 'http' | 'https';
+  /** Hostname glob. `*` matches a single subdomain, `**` matches any number. */
+  hostname: string;
+  /** Literal port such as `8080`, or empty string for no port. */
+  port?: string;
+  /** Pathname glob. `*` matches a single segment, `**` matches any number. Defaults to `**`. */
+  pathname?: string;
+  /** Literal query string such as `?v=1`, or empty string for none. */
+  search?: string;
+}
+
 /** Full plugin configuration shape. */
 export interface PluginConfig {
   deviceSizes: number[];
@@ -9,6 +27,8 @@ export interface PluginConfig {
   minimumCacheTTL: number;
   dangerouslyAllowSVG: boolean;
   blurSize: number;
+  /** Allow-listed external origins. Empty = only local `/uploads/` allowed (default). */
+  remotePatterns: RemotePattern[];
 }
 
 /** Upload file entity stored in the database. */

@@ -2,11 +2,19 @@ import type { ImageLoader, ImageLoaderProps, ImageLoaderWithConfig, ImageConfig 
 
 const DEFAULT_QUALITY = 75;
 
-function toRelativePath(src: string): string {
+function normalizeSrc(src: string, base: string): string {
   if (src.startsWith('http://') || src.startsWith('https://')) {
     try {
-      const { pathname, search } = new URL(src);
-      return pathname + search;
+      const url = new URL(src);
+      // Same-origin as the Strapi server → strip to the relative /uploads/ path.
+      // Cross-origin (external storage provider) → forward the absolute URL so the
+      // server can validate it against its remotePatterns allow-list.
+      // No base configured → can't compare origins; preserve the historical
+      // behavior of treating absolute URLs as same-origin Strapi uploads.
+      if (!base || url.origin === new URL(base).origin) {
+        return url.pathname + url.search;
+      }
+      return src;
     } catch {
       // fall through
     }
@@ -16,7 +24,7 @@ function toRelativePath(src: string): string {
 
 function buildOptimizeUrl(base: string, src: string, width: number, quality?: number): string {
   const q = quality || DEFAULT_QUALITY;
-  return `${base}/api/next-image?url=${encodeURIComponent(toRelativePath(src))}&w=${width}&q=${q}`;
+  return `${base}/api/next-image?url=${encodeURIComponent(normalizeSrc(src, base))}&w=${width}&q=${q}`;
 }
 
 /**
