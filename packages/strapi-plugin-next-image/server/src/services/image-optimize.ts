@@ -6,11 +6,74 @@ import { isAnimated, getContentTypeFromExt, getExtFromMime, loadSharp } from '..
 
 export interface OptimizeParams {
   url: string;
+  // True when `url` is an absolute http(s) URL (already allow-listed by the controller).
+  isRemote?: boolean;
   width: number;
   quality: number;
   outputFormat: string | null;
   minimumCacheTTL: number;
   dangerouslyAllowSVG: boolean;
+}
+
+// A decoded original image plus the metadata needed to name and convert it.
+interface ImageSource {
+  buffer: Buffer;
+  contentType: string;
+  basename: string;
+}
+
+function httpError(message: string, status: number): Error & { status: number } {
+  const err = new Error(message) as Error & { status: number };
+  err.status = status;
+  return err;
+}
+
+// Cap remote downloads to avoid memory blowups from hostile/huge upstreams.
+const MAX_REMOTE_BYTES = 50 * 1024 * 1024; // 50 MB
+const REMOTE_FETCH_TIMEOUT_MS = 10_000;
+
+// Fetch an allow-listed remote image. Throws an Error with `.status` on failure.
+async function fetchRemoteImage(url: string): Promise<ImageSource> {
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(REMOTE_FETCH_TIMEOUT_MS) });
+  } catch {
+    throw httpError(`Failed to fetch remote image: ${url}`, 502);
+  }
+  if (!res.ok) {
+    throw httpError(`Remote image responded with ${res.status}`, res.status === 404 ? 404 : 502);
+  }
+
+  const arrayBuf = await res.arrayBuffer();
+  if (arrayBuf.byteLength > MAX_REMOTE_BYTES) {
+    throw httpError('Remote image exceeds maximum allowed size', 400);
+  }
+
+  const pathname = new URL(url).pathname;
+  const ext = path.extname(pathname);
+  const contentType =
+    res.headers.get('content-type')?.split(';')[0].trim() || getContentTypeFromExt(ext);
+  return {
+    buffer: Buffer.from(arrayBuf),
+    contentType,
+    basename: path.basename(pathname, ext) || 'image',
+  };
+}
+
+// Read a local upload from `public/`. Throws a 404 Error if the file is missing.
+async function readLocalImage(url: string): Promise<ImageSource> {
+  const filePath = path.join(process.cwd(), 'public', url);
+  try {
+    await fsp.access(filePath);
+  } catch {
+    throw httpError(`Image not found: ${url}`, 404);
+  }
+  const ext = path.extname(url);
+  return {
+    buffer: await fsp.readFile(filePath),
+    contentType: getContentTypeFromExt(ext),
+    basename: path.basename(url, ext),
+  };
 }
 
 // fallow-ignore-next-line unused-type
@@ -28,17 +91,13 @@ const revalidating = new Set<string>();
 const inFlight = new Map<string, Promise<OptimizeResult>>();
 
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
-  /**
-   * Optimize an image: resize, convert format, and cache the result.
-   * Uses stale-while-revalidate: expired cache entries are served immediately
-   * while a background re-optimization refreshes the cache for the next request.
-   */
+  // Optimize an image: resize, convert format, and cache the result. Stale cache
+  // entries are served immediately while a background re-optimization refreshes them.
   async optimize(params: OptimizeParams): Promise<OptimizeResult> {
     const { url, width, quality, outputFormat } = params;
 
     const cacheService = getCacheService(strapi);
 
-    // Determine the effective output format string for cache key
     const formatKey = outputFormat || 'original';
 
     // --- Check cache ---
@@ -73,10 +132,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     return promise;
   },
 
-  /**
-   * Background revalidation: re-optimize and update the cache.
-   * Errors are logged but never propagated to the caller.
-   */
+  // Background revalidation: errors are logged, never propagated to the caller.
   async _revalidate(params: OptimizeParams): Promise<void> {
     try {
       await this._optimizeAndCache(params);
@@ -85,31 +141,20 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     }
   },
 
-  /**
-   * Read the original file, optimize it with Sharp, and write to cache.
-   */
+  // Read the original file, optimize it with Sharp, and write to cache.
   async _optimizeAndCache(params: OptimizeParams): Promise<OptimizeResult> {
-    const { url, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } = params;
+    const { url, isRemote, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } =
+      params;
 
     const cacheService = getCacheService(strapi);
     const formatKey = outputFormat || 'original';
 
-    // --- Read original image from uploads directory ---
-    const uploadsDir = path.join(process.cwd(), 'public');
-    const filePath = path.join(uploadsDir, url);
-
-    try {
-      await fsp.access(filePath);
-    } catch {
-      const err = new Error(`Image not found: ${url}`) as Error & { status: number };
-      err.status = 404;
-      throw err;
-    }
-
-    const originalBuffer = await fsp.readFile(filePath);
-    const ext = path.extname(url);
-    const basename = path.basename(url, ext);
-    const originalContentType = getContentTypeFromExt(ext);
+    // --- Read the original image (remote allow-listed URL or local uploads file) ---
+    const {
+      buffer: originalBuffer,
+      basename,
+      contentType: originalContentType,
+    } = isRemote ? await fetchRemoteImage(url) : await readLocalImage(url);
 
     // --- SVG handling ---
     if (originalContentType === 'image/svg+xml') {

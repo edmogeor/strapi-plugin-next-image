@@ -4,11 +4,9 @@ type SharpFn = typeof sharpType;
 
 let sharpPromise: Promise<SharpFn> | null = null;
 
-/**
- * Load the optional `sharp` dependency, caching the resolved module so repeated
- * callers share one dynamic import. Throws if sharp is not installed — callers
- * are responsible for catching and degrading appropriately.
- */
+// Load the optional `sharp` dependency, caching the resolved module so repeated
+// callers share one dynamic import. Throws if sharp is not installed — callers
+// must catch and degrade.
 export function loadSharp(): Promise<SharpFn> {
   if (!sharpPromise) {
     sharpPromise = import('sharp').then((mod) => {
@@ -19,12 +17,8 @@ export function loadSharp(): Promise<SharpFn> {
   return sharpPromise;
 }
 
-/**
- * Canonical map of file extension → MIME content type.
- * All other extension/type lookups in this package derive from this map.
- * Updating the list here updates getContentTypeFromExt, getExtFromMime,
- * and the cache service's extToContentType simultaneously.
- */
+// Canonical extension → MIME map. All extension/type lookups in this package
+// derive from it, so updating here updates getContentTypeFromExt and getExtFromMime.
 const EXT_TO_CONTENT_TYPE: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -38,16 +32,10 @@ const EXT_TO_CONTENT_TYPE: Record<string, string> = {
   '.tiff': 'image/tiff',
 };
 
-/**
- * Derive content type from file extension.
- */
 export function getContentTypeFromExt(ext: string): string {
   return EXT_TO_CONTENT_TYPE[ext.toLowerCase()] || 'application/octet-stream';
 }
 
-/**
- * Derive file extension from MIME content type.
- */
 export function getExtFromMime(mime: string): string {
   for (const [ext, ct] of Object.entries(EXT_TO_CONTENT_TYPE)) {
     if (ct === mime) return ext.replace('.', '');
@@ -55,13 +43,10 @@ export function getExtFromMime(mime: string): string {
   return 'bin';
 }
 
-/**
- * Detect if an image buffer is animated (multi-frame GIF, animated WebP/PNG).
- *
- * - GIF: looks for multiple image descriptor bytes (0x2C).
- * - WebP: looks for ANIM/ANMF chunk within the first ~1 000 bytes.
- * - PNG (APNG): looks for acTL chunk within the first ~2 000 bytes.
- */
+// Detect an animated image buffer:
+// - GIF: multiple image descriptor bytes (0x2C)
+// - WebP: ANIM/ANMF chunk within the first ~1000 bytes
+// - PNG (APNG): acTL chunk within the first ~2000 bytes
 export function isAnimated(buffer: Buffer, contentType: string): boolean {
   if (contentType === 'image/gif') {
     let count = 0;

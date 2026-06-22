@@ -53,6 +53,25 @@ describe('strapiLoader (default)', () => {
     expect(url).toContain('q=75');
   });
 
+  it('strips same-origin absolute Strapi URLs to the relative path', () => {
+    const url = defaultLoader({
+      config: { ...dummyConfig, path: 'https://cms.mywebsite.com' },
+      src: 'https://cms.mywebsite.com/uploads/photo.jpg',
+      width: 640,
+    });
+    expect(url).toContain(`url=${encodeURIComponent('/uploads/photo.jpg')}`);
+  });
+
+  it('forwards cross-origin (external storage) URLs as absolute', () => {
+    const src = 'https://storage.googleapis.com/bucket/photo.jpg';
+    const url = defaultLoader({
+      config: { ...dummyConfig, path: 'https://cms.mywebsite.com' },
+      src,
+      width: 640,
+    });
+    expect(url).toContain(`url=${encodeURIComponent(src)}`);
+  });
+
   it('has __strapi_img_default marker', () => {
     expect('__strapi_img_default' in defaultLoader).toBe(true);
   });

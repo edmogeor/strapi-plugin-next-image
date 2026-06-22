@@ -1,8 +1,5 @@
-/**
- * Adapted from Next.js image types.
- * Original source: https://github.com/vercel/next.js
- * Copyright (c) 2024 Vercel, Inc. — MIT License
- */
+// Adapted from Next.js image types.
+// https://github.com/vercel/next.js — Copyright (c) 2024 Vercel, Inc. — MIT License
 import type { CSSProperties, JSX } from 'react';
 
 export interface StrapiImageEmbeddedConfig {

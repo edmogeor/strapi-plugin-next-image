@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-06-22
+
+### Added
+
+- **strapi-plugin-next-image** — `remotePatterns` config option for optimizing images served from external upload providers (S3, Google Cloud Storage, etc.), mirroring [`next/image`](https://nextjs.org/docs/app/api-reference/components/image#remotepatterns). Absolute URLs are rejected unless they match a configured `{ protocol, hostname, port, pathname, search }` pattern; local `/uploads/` paths remain allowed by default, so there is no breaking change. Closes #1. Pattern matching is a faithful port of Next.js's `matchRemotePattern` (uses `picomatch`).
+- **strapi-plugin-next-image** — The optimization service now fetches allow-listed remote images over HTTP (10s timeout, 50 MB cap) in addition to reading local uploads.
+
+### Changed
+
+- **strapi-next-image** — The default image loader now forwards absolute `src` URLs that are cross-origin to the configured Strapi server (instead of stripping every absolute URL to a relative path), so external-provider URLs reach the optimizer for `remotePatterns` validation. Same-origin Strapi URLs are still normalized to relative `/uploads/` paths.
+
 ## [1.0.1] - 2026-05-07
 
 ### Fixed

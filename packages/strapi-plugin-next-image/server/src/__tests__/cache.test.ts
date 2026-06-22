@@ -32,7 +32,7 @@ function assertEntry(
 const baseService = makeService();
 const cacheDir = baseService.getCacheDir();
 
-/** Manually writes a cache entry to disk with an arbitrary expireAt. */
+// Manually writes a cache entry to disk with an arbitrary expireAt.
 function seedCacheFile(
   url: string,
   width: number,

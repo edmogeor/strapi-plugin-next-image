@@ -1,7 +1,4 @@
-/**
- * Shared image fixture buffers for tests that need real sharp-processable data.
- */
-
+// Shared image fixture buffers for tests that need real sharp-processable data.
 import { loadSharp } from '../image-utils';
 
 export let JPEG_1x1: Buffer;

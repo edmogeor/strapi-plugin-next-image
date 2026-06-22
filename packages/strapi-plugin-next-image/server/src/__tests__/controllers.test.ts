@@ -18,6 +18,7 @@ const defaultConfig: PluginConfig = {
   minimumCacheTTL: 3600,
   dangerouslyAllowSVG: false,
   blurSize: 8,
+  remotePatterns: [],
 };
 
 function makeMockCtx(
@@ -179,6 +180,44 @@ describe('imageOptimizeController.optimize', () => {
   it('returns 400 when url does not start with /uploads/', async () => {
     stubStrapi();
     await assertValidationError({ url: '/etc/passwd', w: '640', q: '75' }, /\/uploads\//);
+  });
+
+  it('returns 400 for a protocol-relative url', async () => {
+    stubStrapi();
+    await assertValidationError(
+      { url: '//evil.com/img.jpg', w: '640', q: '75' },
+      /protocol-relative/,
+    );
+  });
+
+  it('returns 400 for an absolute url with no matching remotePattern', async () => {
+    stubStrapi(); // default remotePatterns: []
+    await assertValidationError(
+      { url: 'https://storage.googleapis.com/bucket/img.jpg', w: '640', q: '75' },
+      /not allowed/,
+    );
+  });
+
+  it('returns 400 for a non-http(s) absolute url even if hostname matches', async () => {
+    stubStrapi({ remotePatterns: [{ hostname: 'evil.com' }] });
+    await assertValidationError({ url: 'ftp://evil.com/img.jpg', w: '640', q: '75' }, /invalid/);
+  });
+
+  it('allows an absolute url that matches a configured remotePattern', async () => {
+    const { optimizeService } = stubStrapi({
+      remotePatterns: [{ protocol: 'https', hostname: 'storage.googleapis.com' }],
+    });
+    const ctx = makeMockCtx({
+      url: 'https://storage.googleapis.com/bucket/img.jpg',
+      w: '640',
+      q: '75',
+    });
+    await imageOptimizeController.optimize(ctx, async () => {});
+
+    expect(ctx.status).toBe(200);
+    expect(optimizeService.optimize).toHaveBeenCalledWith(
+      expect.objectContaining({ isRemote: true }),
+    );
   });
 
   it('returns 400 for a width not in deviceSizes or imageSizes', async () => {

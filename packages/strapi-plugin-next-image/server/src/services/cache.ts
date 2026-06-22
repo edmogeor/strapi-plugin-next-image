@@ -135,10 +135,8 @@ export default () => {
       }
     },
 
-    /**
-     * Return the cached ETag and staleness for a variant without reading the
-     * image buffer. Used for fast If-None-Match 304 checks.
-     */
+    // Return cached ETag and staleness for a variant without reading the image
+    // buffer. Used for fast If-None-Match 304 checks.
     async peekEtag(
       url: string,
       width: number,
