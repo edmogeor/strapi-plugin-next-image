@@ -1,8 +1,5 @@
-/**
- * Adapted from the Next.js Image component.
- * Original source: https://github.com/vercel/next.js
- * Copyright (c) 2024 Vercel, Inc. — MIT License
- */
+// Adapted from the Next.js Image component.
+// https://github.com/vercel/next.js — Copyright (c) 2024 Vercel, Inc. — MIT License
 'use client';
 
 import React, { useRef, useEffect, useCallback, useState, useMemo, forwardRef, cache } from 'react';
@@ -264,11 +261,7 @@ function ImagePreload({ imgAttributes }: { imgAttributes: ImgProps }) {
   return null;
 }
 
-/**
- * Drop-in replacement for Next.js `<Image>`.
- *
- * Usage: `import Image from 'strapi-next-image'`
- */
+// Drop-in replacement for Next.js `<Image>`. Usage: `import Image from 'strapi-next-image'`.
 export const Image = forwardRef<HTMLImageElement | null, ImageProps>((props, forwardedRef) => {
   // Memoised with [] so the config is captured once on first render.
   // path is set synchronously by initializeStrapiImage before the first render,

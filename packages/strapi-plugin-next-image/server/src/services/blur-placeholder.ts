@@ -23,21 +23,15 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
   const blurGenerating = new Set<string>();
 
   const service = {
-    /**
-     * Clear in-memory state for a URL. Call this when a file is updated or
-     * deleted so the next request re-checks the DB.
-     */
+    // Clear in-memory state for a URL so the next request re-checks the DB.
+    // Call when a file is updated or deleted.
     invalidateUrl(url: string): void {
       blurChecked.delete(url);
     },
 
-    /**
-     * Generate and persist a blur placeholder for `fileUrl` if one does not
-     * already exist. Safe to call fire-and-forget — errors are logged internally.
-     *
-     * Uses in-memory sets to deduplicate concurrent calls for the same URL and
-     * to skip the DB lookup entirely once a blur is confirmed to exist.
-     */
+    // Generate and persist a blur placeholder for `fileUrl` if one doesn't exist.
+    // Safe to fire-and-forget — errors are logged internally. The in-memory sets
+    // deduplicate concurrent calls and skip the DB lookup once a blur exists.
     async generateIfMissing(fileUrl: string): Promise<void> {
       if (blurChecked.has(fileUrl) || blurGenerating.has(fileUrl)) return;
 
@@ -70,10 +64,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       }
     },
 
-    /**
-     * Generate a tiny base64-encoded blur placeholder for an image file.
-     * Returns a data URL string or null if the file can't be processed.
-     */
+    // Generate a tiny base64 blur placeholder. Returns a data URL, or null if
+    // the file can't be processed.
     async generate(fileUrl: string, mime: string): Promise<string | null> {
       if (!SUPPORTED_MIME_TYPES.has(mime)) {
         return null;

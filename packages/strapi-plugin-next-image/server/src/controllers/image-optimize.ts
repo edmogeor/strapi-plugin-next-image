@@ -4,13 +4,10 @@ import type { PluginConfig, HttpError } from '../types';
 import { getCacheService, getOptimizeService } from '../types';
 import { hasRemoteMatch } from '../remote-pattern';
 
-/**
- * Determine the best output format based on Accept header and plugin config.
- * Mirrors Next.js getSupportedMimeType().
- */
+// Pick the best output format from the Accept header. Mirrors Next.js
+// getSupportedMimeType(): prefers avif > webp when both are configured and accepted.
 function getSupportedMimeType(accept: string, configFormats: string[]): string | null {
   const acceptHeader = accept || '';
-  // Prefer avif > webp if both configured and accepted
   const mimeTypes = ['image/avif', 'image/webp'];
   for (const mime of mimeTypes) {
     if (configFormats.includes(mime) && acceptHeader.includes(mime)) {

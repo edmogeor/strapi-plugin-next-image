@@ -1,11 +1,7 @@
 import type { ImageConfigComplete } from './types';
 
-/**
- * Client-side defaults mirror the server canonical config in
- * packages/strapi-plugin-next-image/server/src/config.ts.
- * These are fallback values used only before the first successful fetch
- * from /api/next-image/config. The server config is the SSOT.
- */
+// Fallback defaults used only before the first fetch from /api/next-image/config.
+// The server config (server/src/config.ts) is the SSOT — keep in sync.
 export let imageConfigDefault: ImageConfigComplete = {
   deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
   imageSizes: [32, 48, 64, 96, 128, 256, 384],
@@ -47,16 +43,10 @@ async function fetchAndApplyConfig(apiBaseUrl: string): Promise<void> {
   }
 }
 
-/**
- * Fetch and apply image configuration from the Strapi backend.
- * Call this once at your application's entry point.
- *
- * On the server, the config fetch is awaited so SSR renders with the final config.
- * On the client, the server-fetched config is read synchronously from a global that the
- * Image component embeds in the SSR HTML, ensuring hydration uses the same sizes as the
- * server without a CORS round-trip. A deferred fetch is still scheduled to pick up any
- * changes since the last SSR.
- */
+// Fetch and apply image config from the Strapi backend. Call once at your app's
+// entry point. On the server the fetch is awaited so SSR renders with the final
+// config; on the client it reads the config the server embedded in the SSR HTML
+// (no CORS round-trip) and defers a fresh fetch to pick up later changes.
 export async function initializeStrapiImage(apiBaseUrl: string): Promise<void> {
   // Set path immediately so images work even if the config fetch is not awaited
   imageConfigDefault = {

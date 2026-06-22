@@ -27,10 +27,7 @@ function buildOptimizeUrl(base: string, src: string, width: number, quality?: nu
   return `${base}/api/next-image?url=${encodeURIComponent(normalizeSrc(src, base))}&w=${width}&q=${q}`;
 }
 
-/**
- * Default Strapi image loader.
- * Generates URLs pointing at the strapi-plugin-image optimization endpoint.
- */
+// Default Strapi image loader. Builds URLs pointing at the optimization endpoint.
 const strapiLoader: ImageLoaderWithConfig & { __strapi_img_default: true } = Object.assign(
   ({ src, width, quality, config }: ImageLoaderProps & { config: Readonly<ImageConfig> }): string =>
     buildOptimizeUrl(config?.path || '', src, width, quality),
@@ -39,9 +36,7 @@ const strapiLoader: ImageLoaderWithConfig & { __strapi_img_default: true } = Obj
 
 export default strapiLoader as ImageLoaderWithConfig;
 
-/**
- * Create a loader with a custom Strapi base URL.
- */
+// Create a loader with a custom Strapi base URL.
 export function createStrapiLoader(strapiUrl: string): ImageLoader {
   const base = strapiUrl.replace(/\/$/, '');
   const loader: ImageLoader & { __strapi_img_default: true } = Object.assign(

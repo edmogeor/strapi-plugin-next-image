@@ -1,8 +1,5 @@
-/**
- * Ported from Next.js image-blur-svg.ts.
- * Original source: https://github.com/vercel/next.js
- * Copyright (c) 2024 Vercel, Inc. — MIT License
- */
+// Ported from Next.js image-blur-svg.ts (https://github.com/vercel/next.js).
+// Copyright (c) 2024 Vercel, Inc. — MIT License
 export function getImageBlurSvg({
   widthInt,
   heightInt,

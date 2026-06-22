@@ -6,7 +6,7 @@ import { isAnimated, getContentTypeFromExt, getExtFromMime, loadSharp } from '..
 
 export interface OptimizeParams {
   url: string;
-  /** True when `url` is an absolute http(s) URL (already allow-listed by the controller). */
+  // True when `url` is an absolute http(s) URL (already allow-listed by the controller).
   isRemote?: boolean;
   width: number;
   quality: number;
@@ -15,7 +15,7 @@ export interface OptimizeParams {
   dangerouslyAllowSVG: boolean;
 }
 
-/** A decoded original image plus the metadata needed to name and convert it. */
+// A decoded original image plus the metadata needed to name and convert it.
 interface ImageSource {
   buffer: Buffer;
   contentType: string;
@@ -33,7 +33,7 @@ function httpError(message: string, status: number): Error & { status: number } 
 const MAX_REMOTE_BYTES = 50 * 1024 * 1024; // 50 MB
 const REMOTE_FETCH_TIMEOUT_MS = 10_000;
 
-/** Fetch an allow-listed remote image. Throws an Error with `.status` on failure. */
+// Fetch an allow-listed remote image. Throws an Error with `.status` on failure.
 async function fetchRemoteImage(url: string): Promise<ImageSource> {
   let res: Response;
   try {
@@ -62,7 +62,7 @@ async function fetchRemoteImage(url: string): Promise<ImageSource> {
   };
 }
 
-/** Read a local upload from `public/`. Throws a 404 Error if the file is missing. */
+// Read a local upload from `public/`. Throws a 404 Error if the file is missing.
 async function readLocalImage(url: string): Promise<ImageSource> {
   const filePath = path.join(process.cwd(), 'public', url);
   try {
@@ -94,17 +94,13 @@ const revalidating = new Set<string>();
 const inFlight = new Map<string, Promise<OptimizeResult>>();
 
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
-  /**
-   * Optimize an image: resize, convert format, and cache the result.
-   * Uses stale-while-revalidate: expired cache entries are served immediately
-   * while a background re-optimization refreshes the cache for the next request.
-   */
+  // Optimize an image: resize, convert format, and cache the result. Stale cache
+  // entries are served immediately while a background re-optimization refreshes them.
   async optimize(params: OptimizeParams): Promise<OptimizeResult> {
     const { url, width, quality, outputFormat } = params;
 
     const cacheService = getCacheService(strapi);
 
-    // Determine the effective output format string for cache key
     const formatKey = outputFormat || 'original';
 
     // --- Check cache ---
@@ -139,10 +135,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     return promise;
   },
 
-  /**
-   * Background revalidation: re-optimize and update the cache.
-   * Errors are logged but never propagated to the caller.
-   */
+  // Background revalidation: errors are logged, never propagated to the caller.
   async _revalidate(params: OptimizeParams): Promise<void> {
     try {
       await this._optimizeAndCache(params);
@@ -151,9 +144,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     }
   },
 
-  /**
-   * Read the original file, optimize it with Sharp, and write to cache.
-   */
+  // Read the original file, optimize it with Sharp, and write to cache.
   async _optimizeAndCache(params: OptimizeParams): Promise<OptimizeResult> {
     const { url, isRemote, width, quality, outputFormat, minimumCacheTTL, dangerouslyAllowSVG } =
       params;

@@ -1,8 +1,5 @@
-/**
- * Ported from Next.js get-img-props.ts with Strapi-specific adaptations.
- * Original source: https://github.com/vercel/next.js
- * Copyright (c) 2024 Vercel, Inc. — MIT License
- */
+// Ported from Next.js get-img-props.ts with Strapi-specific adaptations.
+// https://github.com/vercel/next.js — Copyright (c) 2024 Vercel, Inc. — MIT License
 import { getImageBlurSvg } from './image-blur-svg';
 import { imageConfigDefault } from './image-config';
 import {
@@ -309,10 +306,7 @@ function validateImgProps(inputs: ValidationInputs): boolean {
   return false;
 }
 
-/**
- * Shared function to compute <img> props from ImageProps.
- * Ported from Next.js get-img-props.ts.
- */
+// Compute <img> props from ImageProps. Ported from Next.js get-img-props.ts.
 export function getImgProps(
   {
     src: srcProp,

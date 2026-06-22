@@ -3,11 +3,8 @@ import type { RemotePattern } from './types';
 
 const { makeRe } = picomatch;
 
-/**
- * Match a single remote pattern against a parsed URL.
- * Ported from Next.js (packages/next/src/shared/lib/match-remote-pattern.ts)
- * to keep behavior identical to `next/image` remotePatterns.
- */
+// Ported verbatim from Next.js (shared/lib/match-remote-pattern.ts) so behavior
+// stays identical to next/image remotePatterns.
 export function matchRemotePattern(pattern: RemotePattern, url: URL): boolean {
   if (pattern.protocol !== undefined) {
     if (pattern.protocol.replace(/:$/, '') !== url.protocol.replace(/:$/, '')) {

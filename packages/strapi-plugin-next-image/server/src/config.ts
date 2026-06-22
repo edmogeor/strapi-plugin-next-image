@@ -1,9 +1,3 @@
-/**
- * Canonical default configuration.
- * This is the SSOT (Single Source of Truth) for image config defaults.
- * The client package mirrors these values as fallback defaults —
- * keep them in sync. See packages/strapi-next-image/src/image-config.ts.
- */
 function validateRemotePatterns(remotePatterns: unknown) {
   if (!Array.isArray(remotePatterns)) {
     throw new Error('remotePatterns must be an array');
@@ -15,6 +9,8 @@ function validateRemotePatterns(remotePatterns: unknown) {
   }
 }
 
+// SSOT for image config defaults. The client package mirrors these as fallback
+// defaults — keep in sync with packages/strapi-next-image/src/image-config.ts.
 export default {
   default: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
