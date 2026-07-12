@@ -1,0 +1,15 @@
+name: Q&A
+description: Ask a question about setting up or using strapi-plugin-next-image
+body:
+  - type: input
+    id: strapi_version
+    attributes:
+      label: Strapi version
+      placeholder: '5.0.0'
+  - type: textarea
+    id: body
+    attributes:
+      label: Question
+      description: What do you need help with?
+    validations:
+      required: true
