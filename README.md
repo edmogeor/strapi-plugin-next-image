@@ -209,6 +209,12 @@ Visit `http://localhost:1337/admin` to upload images, then `http://localhost:517
 
 Includes code ported from the [Next.js](https://github.com/vercel/next.js) Image component by Vercel, Inc. (MIT). See [NOTICE](./NOTICE).
 
+## Donations
+
+Feel free to donate if you'd like to support the development of this plugin.
+
+<a href="https://www.buymeacoffee.com/edmogeor" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 ## License
 
 [MIT](./LICENSE)

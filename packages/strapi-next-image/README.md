@@ -23,7 +23,7 @@ await initializeStrapiImage('https://cms.example.com');
 function Hero({ cover }) {
   return (
     <Image
-      src={cover}           // StrapiMedia object — width, height, alt auto-populated
+      src={cover} // StrapiMedia object — width, height, alt auto-populated
       sizes="(max-width: 768px) 100vw, 800px"
       fill
       priority
@@ -35,11 +35,9 @@ function Hero({ cover }) {
 
 Pass a `StrapiMedia` object to `src` and the component extracts `width`, `height`, `alt`, and `blurDataURL` for you. You can also pass a plain URL string if you supply those props manually.
 
-
-
 ## Configuration
 
-By default, the component uses standard Next.js default breakpoints. 
+By default, the component uses standard Next.js default breakpoints.
 
 To keep your frontend breakpoints mapped securely to your Strapi backend configuration, call `initializeStrapiImage()` once at your app's entry point to fetch the config synchronously from the Strapi server:
 
@@ -71,6 +69,12 @@ For full documentation, configuration reference, and API details, see the [monor
 ## Attribution
 
 This package includes code ported from and adapted from the [Next.js](https://github.com/vercel/next.js) Image component by Vercel, Inc., licensed under the MIT License. See [NOTICE](https://github.com/edmogeor/strapi-plugin-next-image/blob/main/NOTICE) for details.
+
+## Donations
+
+Feel free to donate if you'd like to support the development of this plugin.
+
+<a href="https://www.buymeacoffee.com/edmogeor" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ## License
 
