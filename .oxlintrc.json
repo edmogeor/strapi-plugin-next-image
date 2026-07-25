@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "no-unused-vars": "off",
+    "no-explicit-any": "warn"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/.git/**",
+    "examples/strapi/.strapi/**",
+    "examples/strapi/types/generated/**"
+  ]
+}

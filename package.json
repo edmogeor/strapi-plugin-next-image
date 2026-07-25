@@ -10,8 +10,8 @@
     "prepare": "husky",
     "fallow:check": "fallow",
     "fallow:fix": "fallow fix --yes",
-    "lint": "eslint packages/",
-    "lint:fix": "eslint packages/ --fix",
+    "lint": "oxlint packages/",
+    "lint:fix": "oxlint --fix packages/",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "lint-staged": {
@@ -20,17 +20,12 @@
     ]
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.0",
-    "@typescript-eslint/parser": "^8.59.0",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.5.0",
+    "oxlint": "^1.75.0",
     "husky": "^9.1.7",
     "react-dom": "^19.0.0",
-    "jsdom": "^29.0.2",
-    "lint-staged": "^16.4.0",
-    "prettier": "^3.8.1",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^17.2.0",
+    "prettier": "^3.9.6",
     "react": "^19.0.0"
   }
 }
