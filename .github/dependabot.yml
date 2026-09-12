@@ -1,0 +1,70 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
+    groups:
+      minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '@strapi/sdk-plugin'
+        versions: ['>=7.0.0']
+      - dependency-name: '@strapi/types'
+        versions: ['>=6.0.0']
+      - dependency-name: '@vitest/coverage-v8'
+        versions: ['>=6.0.0']
+      - dependency-name: 'jsdom'
+        versions: ['>=31.0.0']
+      - dependency-name: 'typescript'
+        versions: ['>=6.0.0']
+      - dependency-name: 'vite'
+        versions: ['>=9.0.0']
+      - dependency-name: 'vitest'
+        versions: ['>=6.0.0']
+
+  - package-ecosystem: npm
+    directory: /examples/frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
+    groups:
+      minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '@vitejs/plugin-react'
+        versions: ['>=7.0.0']
+      - dependency-name: 'vite'
+        versions: ['>=9.0.0']
+
+  - package-ecosystem: npm
+    directory: /examples/strapi
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
+    groups:
+      minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '@strapi/plugin-users-permissions'
+        versions: ['>=6.0.0']
+      - dependency-name: '@strapi/strapi'
+        versions: ['>=6.0.0']
+      - dependency-name: 'better-sqlite3'
+        versions: ['>=12.0.0']
+      - dependency-name: 'react'
+        versions: ['>=19.0.0']
+      - dependency-name: 'react-dom'
+        versions: ['>=19.0.0']
+      - dependency-name: 'react-router-dom'
+        versions: ['>=7.0.0']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
