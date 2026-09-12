@@ -20,7 +20,7 @@
     ]
   },
   "devDependencies": {
-    "oxlint": "^1.75.0",
+    "oxlint": "^1.82.0",
     "husky": "^9.1.7",
     "react-dom": "^19.0.0",
     "jsdom": "^30.0.1",
